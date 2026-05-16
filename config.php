@@ -6,10 +6,10 @@
  */
 
 // --- Paramètres de connexion MySQL ---
-define('DB_HOST', ${DB_HOST});
-define('DB_NAME', ${DB_NAME});
-define('DB_USER', ${DB_USERNAME});
-define('DB_PASS', ${DB_PASSWORD});
+define('DB_HOST', getenv('DB_HOST'));
+define('DB_NAME', getenv('DB_NAME'));
+define('DB_USER', getenv('DB_USERNAME'));
+define('DB_PASS', getenv('DB_PASSWORD'));
 define('DB_CHARSET', 'utf8mb4');
 
 // --- Durée de session (secondes) ---
