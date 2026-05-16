@@ -6,10 +6,10 @@
  */
 
 // --- Paramètres de connexion MySQL ---
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'game_lobby');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_HOST', $_ENV['DB_HOST']);
+define('DB_NAME', $_ENV['DB_NAME']);
+define('DB_USER', $_ENV['DB_USERNAME']);
+define('DB_PASS', $_ENV['DB_PASSWORD']);
 define('DB_CHARSET', 'utf8mb4');
 
 // --- Durée de session (secondes) ---
