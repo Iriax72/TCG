@@ -1,0 +1,272 @@
+/* ============================================================
+   css/main.css
+   Variables globales, reset, typographie, utilitaires partagés
+   ============================================================ */
+
+/* --- Import de polices Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600&display=swap');
+
+/* ============================================================
+   Variables CSS (thème global)
+   ============================================================ */
+:root {
+    /* Couleurs principales */
+    --clr-bg:           #070b14;
+    --clr-surface:      #0d1526;
+    --clr-surface-2:    #111d35;
+    --clr-border:       #1e3058;
+    --clr-border-glow:  #2a4a8a;
+
+    /* Accent cyan-électrique */
+    --clr-accent:       #00d4ff;
+    --clr-accent-dim:   #0088aa;
+    --clr-accent-glow:  rgba(0, 212, 255, 0.25);
+
+    /* Accent secondaire (orange) */
+    --clr-orange:       #ff6b35;
+    --clr-orange-dim:   #cc4a1a;
+
+    /* Texte */
+    --clr-text:         #c8d8f0;
+    --clr-text-muted:   #5a7aaa;
+    --clr-text-bright:  #ffffff;
+
+    /* États */
+    --clr-success:      #00e676;
+    --clr-error:        #ff4444;
+    --clr-warning:      #ffbb33;
+    --clr-online:       #00e676;
+    --clr-offline:      #5a7aaa;
+
+    /* Typographie */
+    --font-display:     'Orbitron', monospace;
+    --font-body:        'Rajdhani', sans-serif;
+
+    /* Rayons */
+    --radius-sm:        4px;
+    --radius-md:        8px;
+    --radius-lg:        16px;
+
+    /* Transitions */
+    --transition:       0.2s ease;
+    --transition-slow:  0.4s ease;
+
+    /* Ombres */
+    --shadow-accent:    0 0 20px var(--clr-accent-glow);
+    --shadow-card:      0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================
+   Reset & base
+   ============================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--clr-bg);
+    color: var(--clr-text);
+    min-height: 100vh;
+    line-height: 1.6;
+    /* Grille de fond subtile */
+    background-image:
+        linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+a {
+    color: var(--clr-accent);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+a:hover {
+    color: var(--clr-text-bright);
+}
+
+/* ============================================================
+   Typographie partagée
+   ============================================================ */
+h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+}
+
+/* ============================================================
+   Composants partagés : boutons
+   ============================================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: var(--clr-accent);
+    color: var(--clr-bg);
+}
+.btn-primary:hover {
+    background: #33ddff;
+    box-shadow: var(--shadow-accent);
+    transform: translateY(-1px);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--clr-accent);
+    border: 1px solid var(--clr-border-glow);
+}
+.btn-ghost:hover {
+    border-color: var(--clr-accent);
+    background: var(--clr-accent-glow);
+}
+
+.btn-danger {
+    background: transparent;
+    color: var(--clr-error);
+    border: 1px solid var(--clr-error);
+}
+.btn-danger:hover {
+    background: rgba(255, 68, 68, 0.15);
+}
+
+.btn-success {
+    background: var(--clr-success);
+    color: var(--clr-bg);
+}
+.btn-success:hover {
+    filter: brightness(1.1);
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================================
+   Composants partagés : champs de formulaire
+   ============================================================ */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--clr-text-muted);
+}
+
+.form-group input {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    color: var(--clr-text-bright);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none;
+    width: 100%;
+}
+
+.form-group input:focus {
+    border-color: var(--clr-accent);
+    box-shadow: 0 0 0 3px var(--clr-accent-glow);
+}
+
+.form-group input::placeholder {
+    color: var(--clr-text-muted);
+}
+
+/* ============================================================
+   Messages d'état (erreur, succès)
+   ============================================================ */
+.msg-error,
+.msg-success {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.msg-error {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid var(--clr-error);
+    color: var(--clr-error);
+}
+
+.msg-success {
+    background: rgba(0, 230, 118, 0.1);
+    border: 1px solid var(--clr-success);
+    color: var(--clr-success);
+}
+
+/* ============================================================
+   Badge statut en ligne / hors ligne
+   ============================================================ */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dot.online {
+    background: var(--clr-online);
+    box-shadow: 0 0 6px var(--clr-online);
+    animation: pulse-dot 2s infinite;
+}
+
+.status-dot.offline {
+    background: var(--clr-offline);
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+/* ============================================================
+   Scrollbar personnalisée
+   ============================================================ */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--clr-bg);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--clr-border-glow);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--clr-accent-dim);
+}

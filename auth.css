@@ -1,0 +1,135 @@
+/* ============================================================
+   css/auth.css
+   Styles spécifiques aux pages de connexion et d'inscription
+   ============================================================ */
+
+/* ============================================================
+   Mise en page pleine page
+   ============================================================ */
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Halo décoratif en arrière-plan */
+.auth-page::before {
+    content: '';
+    position: fixed;
+    top: -30%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* ============================================================
+   Carte principale
+   ============================================================ */
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-card), 0 0 60px rgba(0, 212, 255, 0.05);
+    animation: card-appear 0.4s ease both;
+}
+
+@keyframes card-appear {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ============================================================
+   En-tête de la carte
+   ============================================================ */
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-logo {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    color: var(--clr-accent);
+    text-shadow: var(--shadow-accent);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+/* Ligne décorative sous le logo */
+.auth-logo-line {
+    display: block;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--clr-accent), transparent);
+    margin: 0.5rem auto 1rem;
+}
+
+.auth-title {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--clr-text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* ============================================================
+   Formulaire
+   ============================================================ */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Bouton de soumission pleine largeur */
+.auth-form .btn-primary {
+    width: 100%;
+    padding: 0.85rem;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+/* ============================================================
+   Lien vers l'autre page (login ↔ signup)
+   ============================================================ */
+.auth-switch {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--clr-text-muted);
+}
+
+.auth-switch a {
+    color: var(--clr-accent);
+    font-weight: 600;
+}
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================================
+   Séparateur visuel
+   ============================================================ */
+.auth-divider {
+    border: none;
+    border-top: 1px solid var(--clr-border);
+    margin: 1.5rem 0;
+}

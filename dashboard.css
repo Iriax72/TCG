@@ -1,0 +1,489 @@
+/* ============================================================
+   css/dashboard.css
+   Styles du tableau de bord principal (menu, recherche, invitations)
+   ============================================================ */
+
+/* ============================================================
+   Layout global du dashboard
+   ============================================================ */
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ============================================================
+   Barre de navigation supérieure
+   ============================================================ */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 64px;
+    background: rgba(13, 21, 38, 0.95);
+    border-bottom: 1px solid var(--clr-border);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-brand {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--clr-accent);
+    letter-spacing: 0.15em;
+    text-shadow: var(--shadow-accent);
+}
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.navbar-username {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    color: var(--clr-text);
+    letter-spacing: 0.08em;
+}
+
+.navbar-username span {
+    color: var(--clr-accent);
+}
+
+/* Bouton de déconnexion dans la navbar */
+.navbar-logout {
+    background: none;
+    border: 1px solid var(--clr-border);
+    color: var(--clr-text-muted);
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+.navbar-logout:hover {
+    border-color: var(--clr-error);
+    color: var(--clr-error);
+}
+
+/* ============================================================
+   Bouton / badge de notifications dans la navbar
+   ============================================================ */
+.notif-btn {
+    position: relative;
+    background: none;
+    border: 1px solid var(--clr-border);
+    color: var(--clr-text-muted);
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all var(--transition);
+}
+.notif-btn:hover {
+    border-color: var(--clr-accent);
+    color: var(--clr-accent);
+}
+.notif-btn.has-notif {
+    border-color: var(--clr-accent);
+    color: var(--clr-accent);
+    animation: notif-pulse 1.5s infinite;
+}
+
+@keyframes notif-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--clr-accent-glow); }
+    50%       { box-shadow: 0 0 0 6px transparent; }
+}
+
+.notif-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--clr-orange);
+    color: white;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none; /* Affiché par JS si count > 0 */
+}
+
+/* ============================================================
+   Contenu principal (deux colonnes)
+   ============================================================ */
+.dashboard-content {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.5rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    flex: 1;
+}
+
+/* ============================================================
+   Cartes / panneaux
+   ============================================================ */
+.panel {
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--clr-border);
+    background: var(--clr-surface-2);
+}
+
+.panel-header h2 {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--clr-text);
+}
+
+.panel-icon {
+    font-size: 1rem;
+    color: var(--clr-accent);
+}
+
+.panel-body {
+    padding: 1.5rem;
+}
+
+/* ============================================================
+   Section recherche de joueurs
+   ============================================================ */
+.search-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.search-bar input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    color: var(--clr-text-bright);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.search-bar input:focus {
+    border-color: var(--clr-accent);
+    box-shadow: 0 0 0 3px var(--clr-accent-glow);
+}
+
+/* ============================================================
+   Liste des résultats de recherche
+   ============================================================ */
+.player-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 60px;
+}
+
+.player-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: var(--clr-surface-2);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition);
+    animation: item-in 0.2s ease both;
+}
+
+@keyframes item-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.player-item:hover {
+    border-color: var(--clr-border-glow);
+}
+
+.player-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--clr-accent-dim), var(--clr-border-glow));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--clr-text-bright);
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.player-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.player-name {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--clr-text-bright);
+    letter-spacing: 0.05em;
+}
+
+.player-status-text {
+    font-size: 0.8rem;
+    color: var(--clr-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.1rem;
+}
+
+/* Message vide / chargement */
+.list-empty {
+    color: var(--clr-text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 1.5rem;
+    border: 1px dashed var(--clr-border);
+    border-radius: var(--radius-md);
+}
+
+/* ============================================================
+   Panneau des invitations envoyées
+   ============================================================ */
+.invitation-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.875rem 1rem;
+    background: var(--clr-surface-2);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    margin-bottom: 0.5rem;
+    animation: item-in 0.2s ease both;
+}
+
+.invitation-to {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--clr-text-bright);
+    letter-spacing: 0.05em;
+}
+
+.invitation-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.invitation-status.pending  { color: var(--clr-warning); }
+.invitation-status.accepted { color: var(--clr-success); }
+.invitation-status.declined { color: var(--clr-error); }
+
+.invitation-time {
+    font-size: 0.75rem;
+    color: var(--clr-text-muted);
+}
+
+/* ============================================================
+   Modal de notifications (invitations reçues)
+   ============================================================ */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-slow);
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal {
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border-glow);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow-card), var(--shadow-accent);
+    transform: scale(0.95) translateY(10px);
+    transition: transform var(--transition-slow);
+    overflow: hidden;
+}
+
+.modal-overlay.visible .modal {
+    transform: scale(1) translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--clr-border);
+    background: var(--clr-surface-2);
+}
+
+.modal-header h3 {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--clr-accent);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--clr-text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color var(--transition);
+    padding: 0;
+}
+.modal-close:hover {
+    color: var(--clr-text-bright);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Carte d'une invitation reçue */
+.notif-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--clr-surface-2);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    animation: item-in 0.2s ease both;
+}
+
+.notif-text {
+    flex: 1;
+    font-size: 0.95rem;
+    color: var(--clr-text);
+}
+
+.notif-text strong {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    color: var(--clr-accent);
+    letter-spacing: 0.05em;
+}
+
+.notif-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   Toast (petit message temporaire)
+   ============================================================ */
+.toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 300;
+}
+
+.toast {
+    background: var(--clr-surface-2);
+    border-left: 3px solid var(--clr-accent);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: var(--clr-text);
+    box-shadow: var(--shadow-card);
+    min-width: 220px;
+    animation: toast-in 0.3s ease both;
+}
+
+.toast.success { border-left-color: var(--clr-success); }
+.toast.error   { border-left-color: var(--clr-error); }
+.toast.warning { border-left-color: var(--clr-warning); }
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+   Responsive (tablette / mobile)
+   ============================================================ */
+@media (max-width: 900px) {
+    .dashboard-content {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        padding: 0 1rem;
+    }
+    .navbar-brand {
+        font-size: 1rem;
+    }
+    .notif-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
