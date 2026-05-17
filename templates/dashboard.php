@@ -1,3 +1,22 @@
+<?php
+/**
+ * Garde d'authentification.
+ * Si ce fichier est appelé directement (sans passer par index.php),
+ * auth.php n'a pas encore été chargé : on le charge et on vérifie la session.
+ * Si l'utilisateur n'est pas connecté, redirection immédiate vers le login.
+ */
+if (!function_exists('isLoggedIn')) {
+    require_once __DIR__ . '/../auth.php';
+}
+if (!isLoggedIn()) {
+    header('Location: ../index.php?page=login');
+    exit;
+}
+
+// Récupération des variables de session si on arrive directement (hors include)
+$currentUser = $currentUser ?? getCurrentUsername();
+$currentId   = $currentId   ?? getCurrentUserId();
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>

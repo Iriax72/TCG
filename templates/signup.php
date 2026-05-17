@@ -80,7 +80,7 @@
         <!-- Lien vers la connexion -->
         <p class="auth-switch">
             Déjà un compte ?
-            <a href="index.php">Se connecter</a>
+            <a href="index.php?page=login">Se connecter</a>
         </p>
 
     </div>

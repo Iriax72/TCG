@@ -68,11 +68,19 @@ if (isLoggedIn()) {
     $currentId   = getCurrentUserId();
     include __DIR__ . '/templates/dashboard.php';
 } else {
-    // L'utilisateur n'est pas connecté → afficher login/signup
-    $page = $_GET['page'] ?? 'login'; // 'login' ou 'signup'
+    // L'utilisateur n'est pas connecté → redirection vers login ou signup
+    // On utilise header() + exit pour une vraie redirection HTTP 302,
+    // ce qui empêche tout contenu du dashboard d'être envoyé au client.
+    $page = $_GET['page'] ?? '';
+
     if ($page === 'signup') {
         include __DIR__ . '/templates/signup.php';
-    } else {
+    } elseif ($page === 'login') {
         include __DIR__ . '/templates/login.php';
+    } else {
+        // Toute autre valeur (page inconnue, accès direct sans paramètre, etc.)
+        // → redirection explicite vers le login.
+        header('Location: index.php?page=login');
+        exit;
     }
 }
