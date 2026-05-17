@@ -1,0 +1,325 @@
+/* ============================================================
+   css/profile.css
+   Styles de la page d'édition de profil
+   Thème : Médiéval Fantasy sombre — cohérent avec dashboard.css
+   ============================================================ */
+
+/* ============================================================
+   Layout de la page
+   ============================================================ */
+.profile-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Contenu centré avec largeur max */
+.profile-content {
+    max-width: 680px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+    width: 100%;
+}
+
+/* ============================================================
+   En-tête de page (titre + lien retour)
+   ============================================================ */
+.profile-page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.profile-back-btn {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--clr-border-light);
+    color: var(--clr-text-muted);
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.45rem 0.9rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.profile-back-btn:hover {
+    border-color: var(--clr-orange-light);
+    color: var(--clr-orange-light);
+}
+
+.profile-page-title {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: var(--clr-text-bright);
+    text-shadow: 0 0 14px var(--clr-orange-glow);
+}
+
+/* ============================================================
+   Carte principale
+   ============================================================ */
+.profile-card {
+    background-color: var(--clr-surface);
+    background-image:
+        url('../assets/images/parchment-bg.png'),
+        linear-gradient(160deg, var(--clr-surface-3) 0%, var(--clr-surface) 100%);
+    background-size: cover;
+    background-blend-mode: multiply, normal;
+
+    border: 2px solid var(--clr-wood-mid);
+    border-image: url('../assets/images/wood-texture.png') 8 / 8px / 0px repeat;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+}
+
+/* En-tête de la carte (bois) */
+.profile-card-header {
+    padding: 1rem 1.5rem;
+    background-color: var(--clr-wood-dark);
+    background-image:
+        url('../assets/images/wood-texture.png'),
+        var(--wood-gradient);
+    background-size: cover, auto;
+    background-blend-mode: multiply, normal;
+    border-bottom: 1px solid var(--clr-wood-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.profile-card-header h2 {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--clr-text-bright);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+}
+
+.profile-card-icon {
+    color: var(--clr-orange-light);
+    font-size: 1rem;
+    filter: drop-shadow(0 0 4px var(--clr-orange-glow));
+}
+
+.profile-card-body {
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* ============================================================
+   Section avatar
+   ============================================================ */
+.avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Cercle avatar (image ou initiale colorée) */
+.avatar-preview-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid var(--clr-wood-mid);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    object-fit: cover;
+    display: block;
+    transition: filter var(--transition);
+}
+
+/* Overlay au survol pour inviter au clic */
+.avatar-preview-wrap:hover .avatar-preview {
+    filter: brightness(0.6);
+}
+
+.avatar-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition);
+    cursor: pointer;
+    font-size: 1.6rem;
+    color: var(--clr-text-bright);
+    pointer-events: none;
+}
+.avatar-preview-wrap:hover .avatar-overlay {
+    opacity: 1;
+}
+
+/* Avatar par défaut : fond coloré + initiale (rendu via JS/canvas) */
+.avatar-default {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid var(--clr-wood-mid);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    cursor: pointer;
+    transition: filter var(--transition);
+    user-select: none;
+    flex-shrink: 0;
+}
+.avatar-default:hover {
+    filter: brightness(0.7);
+}
+
+.avatar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.avatar-info p {
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--clr-text-muted);
+    line-height: 1.5;
+}
+
+.avatar-info small {
+    font-size: 0.78rem;
+    color: var(--clr-text-dim);
+    display: block;
+}
+
+/* Input file caché — déclenché par le bouton custom */
+#avatar-input {
+    display: none;
+}
+
+/* Barre de progression upload */
+.upload-progress {
+    display: none;
+    height: 4px;
+    background: var(--clr-border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+.upload-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--clr-orange-dim), var(--clr-orange-light));
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+/* Message de statut upload */
+.upload-status {
+    font-size: 0.82rem;
+    min-height: 1.2rem;
+    transition: color var(--transition);
+}
+.upload-status.success { color: var(--clr-success); }
+.upload-status.error   { color: var(--clr-error); }
+
+/* ============================================================
+   Formulaire d'édition (pseudo + bio)
+   ============================================================ */
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Compteur de caractères pour la bio */
+.bio-wrap {
+    position: relative;
+}
+
+.bio-wrap textarea {
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 1rem;
+    color: var(--clr-text-bright);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-style: italic;
+    line-height: 1.6;
+    outline: none;
+    box-shadow: var(--shadow-inset);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.bio-wrap textarea:focus {
+    border-color: var(--clr-orange);
+    box-shadow: var(--shadow-inset), 0 0 0 2px var(--clr-orange-glow);
+}
+.bio-wrap textarea::placeholder {
+    color: var(--clr-text-dim);
+    font-style: italic;
+}
+
+.char-counter {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.75rem;
+    font-size: 0.72rem;
+    color: var(--clr-text-dim);
+    pointer-events: none;
+    transition: color var(--transition);
+}
+.char-counter.warn  { color: var(--clr-warning); }
+.char-counter.limit { color: var(--clr-error); }
+
+/* Bouton de sauvegarde pleine largeur */
+.profile-form .btn-primary {
+    align-self: flex-end;
+    min-width: 180px;
+}
+
+/* Message de retour après sauvegarde */
+.save-status {
+    font-size: 0.88rem;
+    font-style: italic;
+    min-height: 1.2rem;
+    text-align: right;
+}
+.save-status.success { color: var(--clr-success); }
+.save-status.error   { color: var(--clr-error); }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 600px) {
+    .avatar-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .profile-form .btn-primary {
+        align-self: stretch;
+    }
+}

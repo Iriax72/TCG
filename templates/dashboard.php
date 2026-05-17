@@ -56,6 +56,9 @@ $currentId   = $currentId   ?? getCurrentUserId();
                 <span class="notif-badge" id="notif-badge"></span>
             </button>
 
+            <!-- Bouton profil -->
+            <a href="index.php?view=profile" class="navbar-logout" title="Mon profil">&#9812; Profil</a>
+
             <!-- Pseudo de l'utilisateur connecté -->
             <span class="navbar-username">
                 Connecté en tant que <span><?= htmlspecialchars($currentUser) ?></span>

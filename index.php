@@ -66,10 +66,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- Choix du template à afficher ---
 if (isLoggedIn()) {
-    // L'utilisateur est connecté → afficher le dashboard
+    // L'utilisateur est connecté → dashboard ou profil selon le paramètre 'view'
     $currentUser = getCurrentUsername();
     $currentId   = getCurrentUserId();
-    include __DIR__ . '/templates/dashboard.php';
+
+    $view = $_GET['view'] ?? 'dashboard';
+
+    if ($view === 'profile') {
+        include __DIR__ . '/templates/profile.php';
+    } else {
+        include __DIR__ . '/templates/dashboard.php';
+    }
 } else {
     // L'utilisateur n'est pas connecté → redirection vers login ou signup
     // On utilise header() + exit pour une vraie redirection HTTP 302,

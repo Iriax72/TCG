@@ -10,6 +10,8 @@
  *   - respond_invitation : accepter ou refuser une invitation
  *   - get_notifications  : récupérer les invitations en attente reçues
  *   - get_sent           : récupérer les invitations envoyées
+ *   - update_profile     : mettre à jour pseudo et bio
+ *   - get_profile        : récupérer les données de profil
  */
 
 require_once __DIR__ . '/config.php';
@@ -197,6 +199,69 @@ switch ($action) {
         $sent = $stmt->fetchAll();
 
         echo json_encode(['sent' => $sent]);
+        break;
+
+    // ------------------------------------------------------------------
+    // Mettre à jour le profil (pseudo + bio)
+    // Paramètres POST : username, bio
+    // ------------------------------------------------------------------
+    case 'update_profile':
+        $userId  = getCurrentUserId();
+        $pdo     = getDB();
+
+        $newUsername = trim($_POST['username'] ?? '');
+        $newBio      = trim($_POST['bio']      ?? '');
+
+        // Récupérer le pseudo actuel
+        $stmt = $pdo->prepare("SELECT username FROM users WHERE id = :id");
+        $stmt->execute([':id' => $userId]);
+        $current = $stmt->fetch();
+
+        if ($newUsername !== '' && $newUsername !== $current['username']) {
+            if (strlen($newUsername) < 3 || strlen($newUsername) > 32) {
+                echo json_encode(['error' => 'Le pseudo doit contenir entre 3 et 32 caractères.']);
+                exit;
+            }
+            if (!preg_match('/^[a-zA-Z0-9_\-]+$/', $newUsername)) {
+                echo json_encode(['error' => 'Le pseudo ne peut contenir que des lettres, chiffres, _ et -.']);
+                exit;
+            }
+            // Vérifier l'unicité
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE username = :u AND id != :id");
+            $stmt->execute([':u' => $newUsername, ':id' => $userId]);
+            if ($stmt->fetch()) {
+                echo json_encode(['error' => 'Ce pseudo est déjà utilisé.']);
+                exit;
+            }
+        } else {
+            // Conserver le pseudo actuel si non modifié
+            $newUsername = $current['username'];
+        }
+
+        // Troncature de la bio (max 500 caractères)
+        $newBio = mb_substr($newBio, 0, 500);
+
+        $stmt = $pdo->prepare("UPDATE users SET username = :u, bio = :b WHERE id = :id");
+        $stmt->execute([':u' => $newUsername, ':b' => $newBio, ':id' => $userId]);
+
+        // Mettre à jour la session si le pseudo a changé
+        $_SESSION['username'] = $newUsername;
+
+        echo json_encode(['success' => true, 'username' => $newUsername, 'message' => 'Profil mis à jour.']);
+        break;
+
+    // ------------------------------------------------------------------
+    // Récupérer les données de profil de l'utilisateur connecté
+    // ------------------------------------------------------------------
+    case 'get_profile':
+        $userId = getCurrentUserId();
+        $pdo    = getDB();
+
+        $stmt = $pdo->prepare("SELECT username, bio, avatar_path FROM users WHERE id = :id");
+        $stmt->execute([':id' => $userId]);
+        $profile = $stmt->fetch();
+
+        echo json_encode(['profile' => $profile]);
         break;
 
     // ------------------------------------------------------------------

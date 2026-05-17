@@ -19,6 +19,24 @@ define('SESSION_LIFETIME', 3600); // 1 heure
 // --- Fréquence de polling des notifications (ms, utilisée côté JS) ---
 define('POLL_INTERVAL_MS', 3000);
 
+// --- Upload de photos de profil ---
+// Dossier de stockage (chemin absolu depuis la racine du projet)
+define('UPLOAD_DIR',      __DIR__ . '/uploads/avatars/');
+// URL publique correspondante (chemin relatif depuis la racine web)
+define('UPLOAD_URL',      'uploads/avatars/');
+// Taille maximale du fichier envoyé (5 Mo)
+define('UPLOAD_MAX_BYTES', 5 * 1024 * 1024);
+// Dimensions minimales acceptées (px)
+define('UPLOAD_MIN_WIDTH',  100);
+define('UPLOAD_MIN_HEIGHT', 100);
+// Dimensions maximales acceptées (px) — au-delà on redimensionne
+define('UPLOAD_MAX_WIDTH',  1200);
+define('UPLOAD_MAX_HEIGHT', 1200);
+// Qualité JPEG de re-encodage (0-100)
+define('UPLOAD_JPEG_QUALITY', 88);
+// Types MIME autorisés
+define('UPLOAD_ALLOWED_MIME', ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
 /**
  * Retourne une connexion PDO partagée (singleton).
  * Lève une exception en cas d'échec de connexion.
@@ -54,12 +72,14 @@ function getDB(): PDO {
 function initDatabase(): void {
     $pdo = getDB();
 
-    // Table des utilisateurs
+    // Table des utilisateurs (avec colonnes de profil)
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS users (
             id          INT AUTO_INCREMENT PRIMARY KEY,
             username    VARCHAR(32) NOT NULL UNIQUE,
             password    VARCHAR(255) NOT NULL,
+            bio         TEXT         DEFAULT NULL,
+            avatar_path VARCHAR(512) DEFAULT NULL,
             created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
             last_seen   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
