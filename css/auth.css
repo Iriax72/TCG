@@ -1,6 +1,7 @@
 /* ============================================================
    css/auth.css
-   Styles spécifiques aux pages de connexion et d'inscription
+   Styles des pages de connexion et d'inscription
+   Thème : Médiéval Fantasy sombre
    ============================================================ */
 
 /* ============================================================
@@ -16,17 +17,35 @@
     overflow: hidden;
 }
 
-/* Halo décoratif en arrière-plan */
+/* Halos de lumière ambiante (torches imaginaires) */
 .auth-page::before {
     content: '';
     position: fixed;
-    top: -30%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+    top: -20%;
+    left: 15%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(180, 80, 10, 0.12) 0%, transparent 70%);
     pointer-events: none;
+    animation: torch-flicker 4s ease-in-out infinite alternate;
+}
+
+.auth-page::after {
+    content: '';
+    position: fixed;
+    bottom: -10%;
+    right: 10%;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(42, 111, 168, 0.08) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+@keyframes torch-flicker {
+    0%   { opacity: 0.8; transform: scale(1); }
+    33%  { opacity: 1;   transform: scale(1.05) translate(3px, -2px); }
+    66%  { opacity: 0.9; transform: scale(0.98) translate(-2px, 1px); }
+    100% { opacity: 1;   transform: scale(1.02) translate(1px, -1px); }
 }
 
 /* ============================================================
@@ -35,18 +54,46 @@
 .auth-card {
     width: 100%;
     max-width: 420px;
-    background: var(--clr-surface);
-    border: 1px solid var(--clr-border);
-    border-radius: var(--radius-lg);
+    position: relative;
+
+    /* Fond parchemin sombre */
+    background-color: var(--clr-surface);
+    background-image:
+        url('../assets/images/parchment-bg.png'),
+        linear-gradient(160deg, var(--clr-surface-3) 0%, var(--clr-surface) 60%, var(--clr-surface-2) 100%);
+    background-size: cover;
+    background-blend-mode: multiply;
+
+    /* Bordure en bois — image si disponible, sinon CSS solid */
+    border: 3px solid var(--clr-wood-mid);
+    border-image: url('../assets/images/wood-texture.png') 12 / 12px / 0px repeat;
+    border-radius: var(--radius-md);
+
     padding: 2.5rem;
-    box-shadow: var(--shadow-card), 0 0 60px rgba(0, 212, 255, 0.05);
-    animation: card-appear 0.4s ease both;
+    box-shadow:
+        var(--shadow-card),
+        inset 0 1px 0 rgba(255,220,150,0.05),
+        0 0 40px rgba(0,0,0,0.6);
+
+    animation: card-appear 0.45s ease both;
 }
+
+/* Coins décoratifs simulés en CSS (pseudo-éléments) */
+.auth-card::before,
+.auth-card::after {
+    content: '✦';
+    position: absolute;
+    font-size: 0.9rem;
+    color: var(--clr-wood-light);
+    opacity: 0.7;
+}
+.auth-card::before { top: 0.6rem;  left: 0.8rem; }
+.auth-card::after  { bottom: 0.6rem; right: 0.8rem; }
 
 @keyframes card-appear {
     from {
         opacity: 0;
-        transform: translateY(20px) scale(0.97);
+        transform: translateY(24px) scale(0.97);
     }
     to {
         opacity: 1;
@@ -59,34 +106,75 @@
    ============================================================ */
 .auth-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.75rem;
 }
 
+/* Logo / nom du site */
 .auth-logo {
     font-family: var(--font-display);
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     font-weight: 900;
-    letter-spacing: 0.15em;
-    color: var(--clr-accent);
-    text-shadow: var(--shadow-accent);
+    letter-spacing: 0.18em;
+    color: var(--clr-text-bright);
+    text-shadow:
+        0 0 20px var(--clr-orange-glow),
+        0 2px 4px rgba(0,0,0,0.8);
     display: block;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.1rem;
 }
 
-/* Ligne décorative sous le logo */
+/* Emblème optionnel (image logo.png) */
+.auth-emblem {
+    display: block;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 0.75rem;
+    background-image: url('../assets/images/logo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* Fallback : bouclier ASCII si l'image est absente */
+    font-size: 2rem;
+    line-height: 56px;
+    text-align: center;
+    color: var(--clr-orange-light);
+    filter: drop-shadow(0 0 6px var(--clr-orange-glow));
+}
+.auth-emblem:empty::after {
+    content: '⚔';
+}
+
+/* Séparateur décoratif sous le logo */
 .auth-logo-line {
     display: block;
-    width: 60px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--clr-accent), transparent);
-    margin: 0.5rem auto 1rem;
+    height: 16px;
+    background-image: url('../assets/images/divider.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    margin: 0.6rem auto 1rem;
+    /* Fallback CSS */
+    position: relative;
+}
+.auth-logo-line::before {
+    content: '— ✦ —';
+    display: block;
+    text-align: center;
+    color: var(--clr-wood-light);
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    /* Caché si l'image charge correctement */
+    background-image: url('../assets/images/divider.png');
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .auth-title {
-    font-size: 1.1rem;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
     font-weight: 400;
     color: var(--clr-text-muted);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.25em;
     text-transform: uppercase;
 }
 
@@ -96,40 +184,44 @@
 .auth-form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.2rem;
 }
 
-/* Bouton de soumission pleine largeur */
 .auth-form .btn-primary {
     width: 100%;
-    padding: 0.85rem;
-    font-size: 0.85rem;
+    padding: 0.8rem;
+    font-size: 0.8rem;
     margin-top: 0.5rem;
 }
 
 /* ============================================================
-   Lien vers l'autre page (login ↔ signup)
+   Lien de bascule login ↔ signup
    ============================================================ */
 .auth-switch {
     text-align: center;
     margin-top: 1.5rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--clr-text-muted);
+    font-style: italic;
 }
 
 .auth-switch a {
-    color: var(--clr-accent);
+    color: var(--clr-orange-light);
+    font-style: normal;
     font-weight: 600;
+    text-decoration: none;
 }
 .auth-switch a:hover {
-    text-decoration: underline;
+    color: var(--clr-text-bright);
+    text-shadow: 0 0 8px var(--clr-orange-glow);
 }
 
 /* ============================================================
-   Séparateur visuel
+   Séparateur visuel entre sections
    ============================================================ */
 .auth-divider {
     border: none;
     border-top: 1px solid var(--clr-border);
-    margin: 1.5rem 0;
+    margin: 1.25rem 0;
+    position: relative;
 }

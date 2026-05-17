@@ -1,59 +1,129 @@
 /* ============================================================
    css/main.css
    Variables globales, reset, typographie, utilitaires partagés
+   Thème : Médiéval Fantasy — sombre, bois, parchemin, runes
    ============================================================ */
-
-/* --- Import de polices Google Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600&display=swap');
 
 /* ============================================================
-   Variables CSS (thème global)
+   Chargement des fonts locales
+   Fallback : si le fichier est absent, on bascule sur une
+   Google Font chargée en ligne, puis sur une serif générique.
+   ============================================================ */
+@font-face {
+    font-family: 'MedievalDisplay';
+    src: url('../assets/fonts/font1.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MedievalBody';
+    src: url('../assets/fonts/font2.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/*
+ * Fallback Google Fonts chargées uniquement si les fichiers locaux
+ * sont absents. On les déclare APRÈS les @font-face locaux :
+ * le navigateur utilisera la version locale si disponible.
+ * MedievalSharp → affichage / Cinzel Decorative
+ * MedievalBody  → corps      / Crimson Text
+ */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+/* ============================================================
+   Variables CSS — Thème médiéval fantasy sombre
    ============================================================ */
 :root {
-    /* Couleurs principales */
-    --clr-bg:           #070b14;
-    --clr-surface:      #0d1526;
-    --clr-surface-2:    #111d35;
-    --clr-border:       #1e3058;
-    --clr-border-glow:  #2a4a8a;
+    /* --- Couleurs de fond --- */
+    --clr-bg:           #0e0b08;   /* noir chaud, comme une salle au coin du feu */
+    --clr-surface:      #1a1208;   /* brun très sombre */
+    --clr-surface-2:    #221808;   /* légèrement plus clair */
+    --clr-surface-3:    #2e2010;   /* panneaux surélevés */
 
-    /* Accent cyan-électrique */
-    --clr-accent:       #00d4ff;
-    --clr-accent-dim:   #0088aa;
-    --clr-accent-glow:  rgba(0, 212, 255, 0.25);
+    /* --- Bois & bordures --- */
+    --clr-wood-dark:    #3b2510;
+    --clr-wood-mid:     #5c3a1e;
+    --clr-wood-light:   #8b5e3c;
+    --clr-wood-grain:   #6b4423;   /* veine du bois */
+    --clr-border:       #4a2e12;
+    --clr-border-light: #7a4e28;
 
-    /* Accent secondaire (orange) */
-    --clr-orange:       #ff6b35;
-    --clr-orange-dim:   #cc4a1a;
+    /* --- Orange sombre (braises, magie de feu) --- */
+    --clr-orange:       #c45e10;
+    --clr-orange-dim:   #8a3e08;
+    --clr-orange-glow:  rgba(196, 94, 16, 0.25);
+    --clr-orange-light: #e07030;
 
-    /* Texte */
-    --clr-text:         #c8d8f0;
-    --clr-text-muted:   #5a7aaa;
-    --clr-text-bright:  #ffffff;
+    /* --- Bleu (touches de détail, runes, magie) --- */
+    --clr-blue:         #2a6fa8;
+    --clr-blue-dim:     #1a4870;
+    --clr-blue-glow:    rgba(42, 111, 168, 0.20);
+    --clr-blue-light:   #4a9fd8;
 
-    /* États */
-    --clr-success:      #00e676;
-    --clr-error:        #ff4444;
-    --clr-warning:      #ffbb33;
-    --clr-online:       #00e676;
-    --clr-offline:      #5a7aaa;
+    /* --- Texte --- */
+    --clr-text:         #c8a87a;   /* parchemin éclairé */
+    --clr-text-muted:   #7a5e3a;   /* encre vieillie */
+    --clr-text-bright:  #f0d8a8;   /* titre éclairé */
+    --clr-text-dim:     #5a4020;
 
-    /* Typographie */
-    --font-display:     'Orbitron', monospace;
-    --font-body:        'Rajdhani', sans-serif;
+    /* --- États --- */
+    --clr-success:      #5a9e48;   /* vert forêt */
+    --clr-error:        #9e2a2a;   /* sang séché */
+    --clr-warning:      #c88e20;   /* ambre */
+    --clr-online:       #6aba50;
+    --clr-offline:      #5a4020;
 
-    /* Rayons */
-    --radius-sm:        4px;
-    --radius-md:        8px;
-    --radius-lg:        16px;
+    /* --- Typographie --- */
+    --font-display: 'MedievalDisplay', 'Cinzel Decorative', 'Palatino Linotype', serif;
+    --font-body:    'MedievalBody', 'Crimson Text', 'Georgia', serif;
 
-    /* Transitions */
+    /* --- Géométrie --- */
+    --radius-sm:    2px;   /* médiéval = peu de rondeur */
+    --radius-md:    4px;
+    --radius-lg:    6px;
+
+    /* --- Transitions --- */
     --transition:       0.2s ease;
     --transition-slow:  0.4s ease;
 
-    /* Ombres */
-    --shadow-accent:    0 0 20px var(--clr-accent-glow);
-    --shadow-card:      0 4px 24px rgba(0, 0, 0, 0.5);
+    /* --- Ombres --- */
+    --shadow-card:    0 4px 32px rgba(0, 0, 0, 0.7);
+    --shadow-orange:  0 0 18px var(--clr-orange-glow);
+    --shadow-blue:    0 0 14px var(--clr-blue-glow);
+    --shadow-inset:   inset 0 2px 8px rgba(0, 0, 0, 0.6);
+
+    /* --- Texture de bois en CSS pur (fallback si wood-texture.png absent) ---
+       Gradient multi-couches simulant les veines du bois */
+    --wood-gradient:
+        repeating-linear-gradient(
+            92deg,
+            transparent 0px,
+            transparent 4px,
+            rgba(0,0,0,0.04) 4px,
+            rgba(0,0,0,0.04) 5px
+        ),
+        repeating-linear-gradient(
+            178deg,
+            transparent 0px,
+            transparent 18px,
+            rgba(90,50,15,0.10) 18px,
+            rgba(90,50,15,0.10) 19px
+        ),
+        linear-gradient(
+            180deg,
+            var(--clr-wood-dark) 0%,
+            var(--clr-wood-mid)  50%,
+            var(--clr-wood-dark) 100%
+        );
+
+    /* --- Bordure en bois : image si disponible, sinon gradient CSS --- */
+    --wood-border-image:
+        url('../assets/images/wood-texture.png') 12 / 12px / 0px repeat;
+    --wood-border-fallback: var(--clr-wood-mid);
 }
 
 /* ============================================================
@@ -72,24 +142,40 @@ html {
 
 body {
     font-family: var(--font-body);
+    font-size: 1.05rem;
     background-color: var(--clr-bg);
     color: var(--clr-text);
     min-height: 100vh;
-    line-height: 1.6;
-    /* Grille de fond subtile */
+    line-height: 1.7;
+
+    /*
+     * Fond : parchemin sombre.
+     * 1. Image de parchemin si disponible
+     * 2. Sinon : motif de pierre/bois en CSS pur
+     */
     background-image:
-        linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
+        url('../assets/images/parchment-bg.png'),
+        radial-gradient(ellipse at 20% 50%, rgba(58, 35, 10, 0.25) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(30, 20, 5,  0.30) 0%, transparent 50%),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 60px,
+            rgba(0,0,0,0.04) 60px,
+            rgba(0,0,0,0.04) 61px
+        );
+    background-attachment: fixed;
+    background-size: cover, auto, auto, auto;
 }
 
 a {
-    color: var(--clr-accent);
+    color: var(--clr-orange-light);
     text-decoration: none;
     transition: color var(--transition);
 }
 a:hover {
     color: var(--clr-text-bright);
+    text-shadow: 0 0 8px var(--clr-orange-glow);
 }
 
 /* ============================================================
@@ -97,76 +183,153 @@ a:hover {
    ============================================================ */
 h1, h2, h3 {
     font-family: var(--font-display);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     line-height: 1.2;
+    color: var(--clr-text-bright);
 }
 
 /* ============================================================
-   Composants partagés : boutons
+   Mixin bordure en bois (classe utilitaire)
+   Utilise l'image si disponible, sinon le gradient CSS
+   ============================================================ */
+.wood-border {
+    border: 4px solid var(--clr-wood-mid);
+    border-image: var(--wood-border-image);
+    /* Si border-image ne charge pas, on garde border solid */
+    background-image: var(--wood-gradient);
+}
+
+/* ============================================================
+   Séparateur décoratif
+   Image si disponible, sinon ligne ornée en CSS
+   ============================================================ */
+.divider {
+    width: 100%;
+    height: 20px;
+    background-image: url('../assets/images/divider.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    /* Fallback CSS si l'image est absente */
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+/* Rendu fallback si l'image ne charge pas */
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--clr-wood-mid),
+        var(--clr-orange-dim),
+        var(--clr-wood-mid),
+        transparent
+    );
+}
+
+.divider::before { display: block; }
+.divider::after  { display: block; }
+
+/* ============================================================
+   Boutons
    ============================================================ */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.6rem 1.4rem;
+    padding: 0.55rem 1.3rem;
     border: none;
     border-radius: var(--radius-sm);
     font-family: var(--font-display);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     cursor: pointer;
     transition: all var(--transition);
     white-space: nowrap;
+    position: relative;
+    overflow: hidden;
 }
 
+/* Reflet subtil en haut du bouton */
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 40%;
+    background: rgba(255,255,255,0.05);
+    pointer-events: none;
+}
+
+/* --- Bouton principal (orange braise) --- */
 .btn-primary {
-    background: var(--clr-accent);
-    color: var(--clr-bg);
+    background: linear-gradient(180deg, var(--clr-orange-light) 0%, var(--clr-orange-dim) 100%);
+    color: var(--clr-text-bright);
+    border: 1px solid var(--clr-wood-light);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5), var(--shadow-orange);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
 }
 .btn-primary:hover {
-    background: #33ddff;
-    box-shadow: var(--shadow-accent);
+    background: linear-gradient(180deg, #f08040 0%, var(--clr-orange) 100%);
+    box-shadow: 0 3px 14px rgba(0,0,0,0.5), 0 0 22px var(--clr-orange-glow);
     transform: translateY(-1px);
 }
 
+/* --- Bouton fantôme (bois) --- */
 .btn-ghost {
-    background: transparent;
-    color: var(--clr-accent);
-    border: 1px solid var(--clr-border-glow);
+    background: linear-gradient(180deg, var(--clr-surface-3) 0%, var(--clr-surface-2) 100%);
+    color: var(--clr-text);
+    border: 1px solid var(--clr-border-light);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
 .btn-ghost:hover {
-    border-color: var(--clr-accent);
-    background: var(--clr-accent-glow);
+    border-color: var(--clr-orange-light);
+    color: var(--clr-text-bright);
+    background: linear-gradient(180deg, var(--clr-wood-dark) 0%, var(--clr-surface-2) 100%);
 }
 
+/* --- Bouton danger (sang) --- */
 .btn-danger {
-    background: transparent;
-    color: var(--clr-error);
-    border: 1px solid var(--clr-error);
+    background: linear-gradient(180deg, #7a2020 0%, #4a1010 100%);
+    color: #e8a0a0;
+    border: 1px solid #9a3030;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 .btn-danger:hover {
-    background: rgba(255, 68, 68, 0.15);
+    background: linear-gradient(180deg, #9a2828 0%, #6a1818 100%);
+    color: var(--clr-text-bright);
 }
 
+/* --- Bouton succès (forêt) --- */
 .btn-success {
-    background: var(--clr-success);
-    color: var(--clr-bg);
+    background: linear-gradient(180deg, #3a6e28 0%, #254818 100%);
+    color: #b0e8a0;
+    border: 1px solid #4a8e38;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 .btn-success:hover {
-    filter: brightness(1.1);
+    background: linear-gradient(180deg, #4a8e38 0%, #346028 100%);
+    color: var(--clr-text-bright);
 }
 
 .btn:disabled {
-    opacity: 0.4;
+    opacity: 0.35;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
 }
 
 /* ============================================================
-   Composants partagés : champs de formulaire
+   Champs de formulaire
    ============================================================ */
 .form-group {
     display: flex;
@@ -178,54 +341,58 @@ h1, h2, h3 {
     font-family: var(--font-display);
     font-size: 0.65rem;
     font-weight: 700;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--clr-text-muted);
 }
 
 .form-group input {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     border: 1px solid var(--clr-border);
     border-radius: var(--radius-sm);
-    padding: 0.75rem 1rem;
+    padding: 0.7rem 1rem;
     color: var(--clr-text-bright);
     font-family: var(--font-body);
     font-size: 1rem;
     transition: border-color var(--transition), box-shadow var(--transition);
     outline: none;
     width: 100%;
+    box-shadow: var(--shadow-inset);
 }
 
 .form-group input:focus {
-    border-color: var(--clr-accent);
-    box-shadow: 0 0 0 3px var(--clr-accent-glow);
+    border-color: var(--clr-orange);
+    box-shadow: var(--shadow-inset), 0 0 0 2px var(--clr-orange-glow);
 }
 
 .form-group input::placeholder {
-    color: var(--clr-text-muted);
+    color: var(--clr-text-dim);
+    font-style: italic;
 }
 
 /* ============================================================
-   Messages d'état (erreur, succès)
+   Messages d'état
    ============================================================ */
 .msg-error,
 .msg-success {
-    padding: 0.75rem 1rem;
+    padding: 0.7rem 1rem;
     border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-family: var(--font-body);
+    font-style: italic;
+    border-left: 3px solid;
 }
 
 .msg-error {
-    background: rgba(255, 68, 68, 0.1);
-    border: 1px solid var(--clr-error);
-    color: var(--clr-error);
+    background: rgba(100, 20, 20, 0.25);
+    border-color: var(--clr-error);
+    color: #e09090;
 }
 
 .msg-success {
-    background: rgba(0, 230, 118, 0.1);
-    border: 1px solid var(--clr-success);
-    color: var(--clr-success);
+    background: rgba(30, 70, 20, 0.25);
+    border-color: var(--clr-success);
+    color: #90d080;
 }
 
 /* ============================================================
@@ -242,7 +409,7 @@ h1, h2, h3 {
 .status-dot.online {
     background: var(--clr-online);
     box-shadow: 0 0 6px var(--clr-online);
-    animation: pulse-dot 2s infinite;
+    animation: pulse-dot 2.5s infinite;
 }
 
 .status-dot.offline {
@@ -251,22 +418,22 @@ h1, h2, h3 {
 
 @keyframes pulse-dot {
     0%, 100% { opacity: 1; }
-    50%       { opacity: 0.4; }
+    50%       { opacity: 0.35; }
 }
 
 /* ============================================================
    Scrollbar personnalisée
    ============================================================ */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 7px;
 }
 ::-webkit-scrollbar-track {
     background: var(--clr-bg);
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--clr-border-glow);
-    border-radius: 3px;
+    background: var(--clr-wood-mid);
+    border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--clr-accent-dim);
+    background: var(--clr-wood-light);
 }

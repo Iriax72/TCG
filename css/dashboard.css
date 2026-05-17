@@ -1,10 +1,11 @@
 /* ============================================================
    css/dashboard.css
-   Styles du tableau de bord principal (menu, recherche, invitations)
+   Styles du tableau de bord principal
+   Thème : Médiéval Fantasy sombre
    ============================================================ */
 
 /* ============================================================
-   Layout global du dashboard
+   Layout global
    ============================================================ */
 .dashboard {
     display: flex;
@@ -13,29 +14,55 @@
 }
 
 /* ============================================================
-   Barre de navigation supérieure
+   Barre de navigation
    ============================================================ */
 .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 2rem;
-    height: 64px;
-    background: rgba(13, 21, 38, 0.95);
-    border-bottom: 1px solid var(--clr-border);
-    backdrop-filter: blur(8px);
+    height: 62px;
+
+    /* Bois sombre avec veines */
+    background-color: var(--clr-wood-dark);
+    background-image:
+        url('../assets/images/wood-texture.png'),
+        var(--wood-gradient);
+    background-size: cover, auto;
+    background-blend-mode: multiply, normal;
+
+    /* Bordure basse lumineuse (braise) */
+    border-bottom: 2px solid var(--clr-orange-dim);
+    box-shadow:
+        0 4px 24px rgba(0,0,0,0.7),
+        0 1px 0 rgba(255,180,80,0.08) inset;
+
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
+/* Logo dans la navbar */
 .navbar-brand {
     font-family: var(--font-display);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 900;
-    color: var(--clr-accent);
-    letter-spacing: 0.15em;
-    text-shadow: var(--shadow-accent);
+    color: var(--clr-text-bright);
+    letter-spacing: 0.2em;
+    text-shadow:
+        0 0 16px var(--clr-orange-glow),
+        0 2px 4px rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* Icône épée devant le nom */
+.navbar-brand::before {
+    content: '⚔';
+    font-size: 1rem;
+    color: var(--clr-orange-light);
+    filter: drop-shadow(0 0 6px var(--clr-orange-glow));
 }
 
 .navbar-user {
@@ -45,24 +72,26 @@
 }
 
 .navbar-username {
-    font-family: var(--font-display);
-    font-size: 0.75rem;
-    color: var(--clr-text);
-    letter-spacing: 0.08em;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--clr-text-muted);
 }
 
 .navbar-username span {
-    color: var(--clr-accent);
+    color: var(--clr-text-bright);
+    font-style: normal;
+    font-weight: 600;
 }
 
-/* Bouton de déconnexion dans la navbar */
+/* Bouton déconnexion */
 .navbar-logout {
-    background: none;
+    background: rgba(0,0,0,0.35);
     border: 1px solid var(--clr-border);
     color: var(--clr-text-muted);
     font-family: var(--font-display);
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     padding: 0.4rem 0.8rem;
     border-radius: var(--radius-sm);
@@ -71,16 +100,17 @@
 }
 .navbar-logout:hover {
     border-color: var(--clr-error);
-    color: var(--clr-error);
+    color: #e09090;
+    background: rgba(100,20,20,0.3);
 }
 
 /* ============================================================
-   Bouton / badge de notifications dans la navbar
+   Bouton / badge de notifications
    ============================================================ */
 .notif-btn {
     position: relative;
-    background: none;
-    border: 1px solid var(--clr-border);
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--clr-border-light);
     color: var(--clr-text-muted);
     width: 38px;
     height: 38px;
@@ -93,18 +123,19 @@
     transition: all var(--transition);
 }
 .notif-btn:hover {
-    border-color: var(--clr-accent);
-    color: var(--clr-accent);
+    border-color: var(--clr-orange-light);
+    color: var(--clr-orange-light);
+    box-shadow: var(--shadow-orange);
 }
 .notif-btn.has-notif {
-    border-color: var(--clr-accent);
-    color: var(--clr-accent);
-    animation: notif-pulse 1.5s infinite;
+    border-color: var(--clr-orange);
+    color: var(--clr-orange-light);
+    animation: notif-pulse 2s infinite;
 }
 
 @keyframes notif-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 var(--clr-accent-glow); }
-    50%       { box-shadow: 0 0 0 6px transparent; }
+    0%, 100% { box-shadow: 0 0 0 0 var(--clr-orange-glow); }
+    50%       { box-shadow: 0 0 0 5px transparent; }
 }
 
 .notif-badge {
@@ -112,17 +143,17 @@
     top: -5px;
     right: -5px;
     background: var(--clr-orange);
-    color: white;
+    color: var(--clr-text-bright);
     font-family: var(--font-display);
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     font-weight: 700;
-    width: 18px;
-    height: 18px;
+    width: 17px;
+    height: 17px;
     border-radius: 50%;
-    display: flex;
+    display: none; /* affiché par JS */
     align-items: center;
     justify-content: center;
-    display: none; /* Affiché par JS si count > 0 */
+    box-shadow: 0 0 6px var(--clr-orange-glow);
 }
 
 /* ============================================================
@@ -140,36 +171,55 @@
 }
 
 /* ============================================================
-   Cartes / panneaux
+   Panneaux (cards)
    ============================================================ */
 .panel {
-    background: var(--clr-surface);
-    border: 1px solid var(--clr-border);
-    border-radius: var(--radius-lg);
+    background-color: var(--clr-surface);
+    background-image:
+        url('../assets/images/parchment-bg.png'),
+        linear-gradient(170deg, var(--clr-surface-3) 0%, var(--clr-surface) 100%);
+    background-size: cover;
+    background-blend-mode: multiply, normal;
+
+    /* Bordure bois */
+    border: 2px solid var(--clr-wood-mid);
+    border-image: url('../assets/images/wood-texture.png') 8 / 8px / 0px repeat;
+
+    border-radius: var(--radius-md);
     overflow: hidden;
+    box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,200,100,0.04);
 }
 
+/* En-tête du panneau */
 .panel-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--clr-border);
-    background: var(--clr-surface-2);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--clr-wood-dark);
+
+    background-color: var(--clr-wood-dark);
+    background-image:
+        url('../assets/images/wood-texture.png'),
+        var(--wood-gradient);
+    background-size: cover, auto;
+    background-blend-mode: multiply, normal;
 }
 
 .panel-header h2 {
     font-family: var(--font-display);
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--clr-text);
+    color: var(--clr-text-bright);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
 }
 
 .panel-icon {
     font-size: 1rem;
-    color: var(--clr-accent);
+    color: var(--clr-orange-light);
+    filter: drop-shadow(0 0 4px var(--clr-orange-glow));
 }
 
 .panel-body {
@@ -177,34 +227,40 @@
 }
 
 /* ============================================================
-   Section recherche de joueurs
+   Barre de recherche
    ============================================================ */
 .search-bar {
     display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
 }
 
 .search-bar input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0,0,0,0.45);
     border: 1px solid var(--clr-border);
     border-radius: var(--radius-sm);
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 1rem;
     color: var(--clr-text-bright);
     font-family: var(--font-body);
     font-size: 1rem;
     outline: none;
+    box-shadow: var(--shadow-inset);
     transition: border-color var(--transition), box-shadow var(--transition);
 }
 
 .search-bar input:focus {
-    border-color: var(--clr-accent);
-    box-shadow: 0 0 0 3px var(--clr-accent-glow);
+    border-color: var(--clr-orange);
+    box-shadow: var(--shadow-inset), 0 0 0 2px var(--clr-orange-glow);
+}
+
+.search-bar input::placeholder {
+    color: var(--clr-text-dim);
+    font-style: italic;
 }
 
 /* ============================================================
-   Liste des résultats de recherche
+   Liste de joueurs
    ============================================================ */
 .player-list {
     display: flex;
@@ -217,11 +273,11 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.875rem 1rem;
-    background: var(--clr-surface-2);
+    padding: 0.75rem 1rem;
+    background: rgba(0,0,0,0.3);
     border: 1px solid var(--clr-border);
-    border-radius: var(--radius-md);
-    transition: border-color var(--transition);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--transition), background var(--transition);
     animation: item-in 0.2s ease both;
 }
 
@@ -231,23 +287,27 @@
 }
 
 .player-item:hover {
-    border-color: var(--clr-border-glow);
+    border-color: var(--clr-wood-light);
+    background: rgba(58, 35, 10, 0.4);
 }
 
+/* Avatar circulaire avec initiale */
 .player-avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--clr-accent-dim), var(--clr-border-glow));
+    background: linear-gradient(135deg, var(--clr-wood-mid), var(--clr-wood-dark));
+    border: 1px solid var(--clr-border-light);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--font-display);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: var(--clr-text-bright);
     flex-shrink: 0;
     text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
 .player-info {
@@ -257,14 +317,15 @@
 
 .player-name {
     font-family: var(--font-display);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: var(--clr-text-bright);
     letter-spacing: 0.05em;
 }
 
 .player-status-text {
-    font-size: 0.8rem;
+    font-size: 0.82rem;
+    font-style: italic;
     color: var(--clr-text-muted);
     display: flex;
     align-items: center;
@@ -272,63 +333,70 @@
     margin-top: 0.1rem;
 }
 
-/* Message vide / chargement */
+/* Message liste vide */
 .list-empty {
     color: var(--clr-text-muted);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    font-style: italic;
     text-align: center;
     padding: 1.5rem;
     border: 1px dashed var(--clr-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
 }
 
 /* ============================================================
-   Panneau des invitations envoyées
+   Invitations envoyées
    ============================================================ */
 .invitation-item {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
-    padding: 0.875rem 1rem;
-    background: var(--clr-surface-2);
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    background: rgba(0,0,0,0.3);
     border: 1px solid var(--clr-border);
-    border-radius: var(--radius-md);
+    border-left: 3px solid var(--clr-wood-mid);
+    border-radius: var(--radius-sm);
     margin-bottom: 0.5rem;
     animation: item-in 0.2s ease both;
+    transition: border-color var(--transition);
+}
+.invitation-item:hover {
+    border-left-color: var(--clr-orange-dim);
 }
 
 .invitation-to {
     font-family: var(--font-display);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
     color: var(--clr-text-bright);
     letter-spacing: 0.05em;
 }
 
 .invitation-status {
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
 }
-
 .invitation-status.pending  { color: var(--clr-warning); }
 .invitation-status.accepted { color: var(--clr-success); }
 .invitation-status.declined { color: var(--clr-error); }
 
 .invitation-time {
-    font-size: 0.75rem;
-    color: var(--clr-text-muted);
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--clr-text-dim);
 }
 
 /* ============================================================
-   Modal de notifications (invitations reçues)
+   Modal (invitations reçues)
    ============================================================ */
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.80);
+    backdrop-filter: blur(3px);
     z-index: 200;
     display: flex;
     align-items: center;
@@ -345,15 +413,24 @@
 }
 
 .modal {
-    background: var(--clr-surface);
-    border: 1px solid var(--clr-border-glow);
-    border-radius: var(--radius-lg);
+    background-color: var(--clr-surface);
+    background-image:
+        url('../assets/images/parchment-bg.png'),
+        linear-gradient(160deg, var(--clr-surface-3) 0%, var(--clr-surface) 100%);
+    background-size: cover;
+    background-blend-mode: multiply, normal;
+
+    border: 2px solid var(--clr-wood-mid);
+    border-image: url('../assets/images/wood-texture.png') 8 / 8px / 0px repeat;
+
+    border-radius: var(--radius-md);
     width: 100%;
     max-width: 480px;
-    box-shadow: var(--shadow-card), var(--shadow-accent);
-    transform: scale(0.95) translateY(10px);
-    transition: transform var(--transition-slow);
+    box-shadow: var(--shadow-card), 0 0 40px rgba(0,0,0,0.8);
     overflow: hidden;
+
+    transform: scale(0.94) translateY(12px);
+    transition: transform var(--transition-slow);
 }
 
 .modal-overlay.visible .modal {
@@ -364,28 +441,35 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--clr-border);
-    background: var(--clr-surface-2);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--clr-wood-dark);
+
+    background-color: var(--clr-wood-dark);
+    background-image:
+        url('../assets/images/wood-texture.png'),
+        var(--wood-gradient);
+    background-size: cover, auto;
+    background-blend-mode: multiply, normal;
 }
 
 .modal-header h3 {
     font-family: var(--font-display);
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 700;
-    letter-spacing: 0.1em;
-    color: var(--clr-accent);
+    letter-spacing: 0.14em;
+    color: var(--clr-orange-light);
+    text-shadow: 0 0 10px var(--clr-orange-glow);
 }
 
 .modal-close {
     background: none;
     border: none;
     color: var(--clr-text-muted);
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     cursor: pointer;
     line-height: 1;
-    transition: color var(--transition);
     padding: 0;
+    transition: color var(--transition);
 }
 .modal-close:hover {
     color: var(--clr-text-bright);
@@ -406,22 +490,24 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    background: var(--clr-surface-2);
+    background: rgba(0,0,0,0.35);
     border: 1px solid var(--clr-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     animation: item-in 0.2s ease both;
 }
 
 .notif-text {
     flex: 1;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    font-style: italic;
     color: var(--clr-text);
 }
 
 .notif-text strong {
     font-family: var(--font-display);
-    font-size: 0.8rem;
-    color: var(--clr-accent);
+    font-size: 0.78rem;
+    font-style: normal;
+    color: var(--clr-orange-light);
     letter-spacing: 0.05em;
 }
 
@@ -432,7 +518,7 @@
 }
 
 /* ============================================================
-   Toast (petit message temporaire)
+   Toasts
    ============================================================ */
 .toast-container {
     position: fixed;
@@ -445,14 +531,17 @@
 }
 
 .toast {
-    background: var(--clr-surface-2);
-    border-left: 3px solid var(--clr-accent);
-    border-radius: var(--radius-md);
+    background-color: var(--clr-surface-3);
+    background-image: linear-gradient(90deg, var(--clr-surface-2), var(--clr-surface-3));
+    border: 1px solid var(--clr-border-light);
+    border-left: 3px solid var(--clr-orange);
+    border-radius: var(--radius-sm);
     padding: 0.75rem 1rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    font-style: italic;
     color: var(--clr-text);
     box-shadow: var(--shadow-card);
-    min-width: 220px;
+    min-width: 230px;
     animation: toast-in 0.3s ease both;
 }
 
@@ -466,7 +555,7 @@
 }
 
 /* ============================================================
-   Responsive (tablette / mobile)
+   Responsive
    ============================================================ */
 @media (max-width: 900px) {
     .dashboard-content {
@@ -480,7 +569,10 @@
         padding: 0 1rem;
     }
     .navbar-brand {
-        font-size: 1rem;
+        font-size: 0.9rem;
+    }
+    .navbar-username {
+        display: none; /* trop étroit sur mobile */
     }
     .notif-item {
         flex-direction: column;
