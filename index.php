@@ -50,7 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($result['error'])) {
             $error = $result['error'];
         } else {
-            $success = 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.';
+            // Inscription réussie : la session est déjà ouverte dans signup().
+            // On redirige directement vers le dashboard.
+            header('Location: index.php');
+            exit;
         }
     }
 

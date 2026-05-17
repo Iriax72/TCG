@@ -87,6 +87,14 @@ function signup(string $username, string $password, string $passwordConfirm): ar
     $stmt = $pdo->prepare("INSERT INTO users (username, password) VALUES (:username, :password)");
     $stmt->execute([':username' => $username, ':password' => $hash]);
 
+    // --- Connexion automatique après inscription ---
+    // On ouvre directement la session avec le nouveau compte,
+    // sans obliger l'utilisateur à se reconnecter manuellement.
+    $newId = (int) $pdo->lastInsertId();
+    session_regenerate_id(true);
+    $_SESSION['user_id']  = $newId;
+    $_SESSION['username'] = $username;
+
     return ['success' => true];
 }
 
