@@ -1,0 +1,6 @@
+on a besoin de :
+
+- wood-texture.png
+- parchment.png
+- divider.png
+- logo.png
