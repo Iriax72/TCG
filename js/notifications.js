@@ -1,236 +1,244 @@
 /**
- * js/dashboard.js
- * Logique du tableau de bord :
- *  - Recherche de joueurs
- *  - Envoi d'invitations de partie
- *  - Affichage des invitations envoyées
+ * js/notifications.js
+ * Gestion des notifications d'invitations reçues.
  *
- * Dépend de : notifications.js (Toast, escapeHtml, Notifications)
+ * Principe : polling régulier de l'API (toutes les APP.pollInterval ms)
+ * pour récupérer les invitations en attente. Si de nouvelles arrivent,
+ * le badge sur le bouton cloche est mis à jour.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+/* ============================================================
+   Module Notifications (IIFE pour éviter les variables globales)
+   ============================================================ */
+const Notifications = (() => {
 
-    /* ============================================================
-       Références DOM
-       ============================================================ */
-    const searchInput = document.getElementById('search-input');
-    const searchBtn   = document.getElementById('search-btn');
-    const playerList  = document.getElementById('player-list');
-    const sentPanel   = document.getElementById('sent-panel');
+    // Références DOM
+    const notifBtn   = document.getElementById('notif-btn');
+    const notifBadge = document.getElementById('notif-badge');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalBody    = document.getElementById('modal-body');
+    const modalClose   = document.getElementById('modal-close');
 
-    /* ============================================================
-       Debounce : déclenche la recherche après 400ms de pause de frappe
-       ============================================================ */
-    let debounceTimer = null;
+    // Ensemble des IDs d'invitations déjà connues (pour détecter les nouvelles)
+    let knownIds = new Set();
 
-    searchInput.addEventListener('input', () => {
-        clearTimeout(debounceTimer);
-        const q = searchInput.value.trim();
+    // Référence à l'intervalle de polling
+    let pollTimer = null;
 
-        if (q.length < 2) {
-            renderEmptySearch('Tapez un pseudo pour rechercher un joueur.');
-            return;
-        }
-
-        debounceTimer = setTimeout(() => searchPlayers(q), 400);
-    });
-
-    // Déclenchement aussi sur le bouton et la touche Entrée
-    searchBtn.addEventListener('click', () => searchPlayers(searchInput.value.trim()));
-    searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') searchPlayers(searchInput.value.trim());
-    });
-
-    /* ============================================================
-       Recherche de joueurs via l'API
-       ============================================================ */
-    async function searchPlayers(query) {
-        if (query.length < 2) {
-            renderEmptySearch('Le pseudo doit contenir au moins 2 caractères.');
-            return;
-        }
-
-        // Indicateur de chargement
-        playerList.innerHTML = '<p class="list-empty">Recherche en cours…</p>';
-
-        try {
-            const response = await fetch(`api.php?action=search_users&q=${encodeURIComponent(query)}`);
-            if (!response.ok) throw new Error('Erreur serveur');
-
-            const data  = await response.json();
-            const users = data.users || [];
-
-            renderPlayerList(users);
-
-        } catch (err) {
-            playerList.innerHTML = '<p class="list-empty">Erreur lors de la recherche. Réessayez.</p>';
-        }
-    }
-
-    /* ============================================================
-       Rendu de la liste de joueurs
-       ============================================================ */
-    function renderPlayerList(users) {
-        if (users.length === 0) {
-            renderEmptySearch('Aucun joueur trouvé pour ce pseudo.');
-            return;
-        }
-
-        playerList.innerHTML = '';
-
-        users.forEach((user, index) => {
-            const isOnline = parseInt(user.online) === 1;
-
-            // Initiale pour l'avatar
-            const initial = user.username.charAt(0).toUpperCase();
-
-            const item = document.createElement('div');
-            item.classList.add('player-item');
-            item.style.animationDelay = `${index * 0.05}s`;
-
-            item.innerHTML = `
-                <div class="player-avatar">${escapeHtml(initial)}</div>
-                <div class="player-info">
-                    <div class="player-name">${escapeHtml(user.username)}</div>
-                    <div class="player-status-text">
-                        <span class="status-dot ${isOnline ? 'online' : 'offline'}"></span>
-                        ${isOnline ? 'En ligne' : 'Hors ligne'}
-                    </div>
-                </div>
-                <button
-                    class="btn btn-primary invite-btn"
-                    data-id="${user.id}"
-                    data-username="${escapeHtml(user.username)}"
-                    title="Inviter ${escapeHtml(user.username)} à jouer"
-                >
-                    &#9993; Inviter
-                </button>
-            `;
-
-            // Bouton d'invitation
-            item.querySelector('.invite-btn').addEventListener('click', (e) => {
-                const btn = e.currentTarget;
-                sendInvitation(parseInt(btn.dataset.id), btn.dataset.username, btn);
-            });
-
-            playerList.appendChild(item);
+    /* -------- Initialisation -------- */
+    function init() {
+        // Ouvrir / fermer le modal
+        notifBtn.addEventListener('click', openModal);
+        modalClose.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => {
+            // Clic en dehors du modal → fermer
+            if (e.target === modalOverlay) closeModal();
         });
+
+        // Fermer avec Échap
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Premier poll immédiat, puis polling régulier
+        poll();
+        pollTimer = setInterval(poll, window.APP.pollInterval);
     }
 
-    /* ============================================================
-       Message vide dans la liste de joueurs
-       ============================================================ */
-    function renderEmptySearch(message) {
-        playerList.innerHTML = `<p class="list-empty">${escapeHtml(message)}</p>`;
-    }
-
-    /* ============================================================
-       Envoi d'une invitation de partie
-       ============================================================ */
-    async function sendInvitation(toUserId, toUsername, btnElement) {
-        // Désactiver le bouton immédiatement (évite les doubles envois)
-        btnElement.disabled = true;
-        btnElement.textContent = 'Envoi…';
-
-        const formData = new FormData();
-        formData.append('to_user_id', toUserId);
-
+    /* -------- Polling de l'API -------- */
+    async function poll() {
         try {
-            const response = await fetch('api.php?action=send_invitation', {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                Toast.show(`&#9993; Invitation envoyée à <strong>${escapeHtml(toUsername)}</strong> !`, 'success');
-                btnElement.textContent = '&#10003; Envoyé';
-                // Rafraîchir la liste des invitations envoyées
-                loadSentInvitations();
-            } else {
-                Toast.show(data.error || 'Erreur lors de l\'envoi.', 'error');
-                // Réactiver le bouton en cas d'erreur
-                btnElement.disabled = false;
-                btnElement.innerHTML = '&#9993; Inviter';
-            }
-
-        } catch {
-            Toast.show('Erreur réseau. Réessayez.', 'error');
-            btnElement.disabled = false;
-            btnElement.innerHTML = '&#9993; Inviter';
-        }
-    }
-
-    /* ============================================================
-       Chargement et rendu des invitations envoyées
-       ============================================================ */
-    async function loadSentInvitations() {
-        try {
-            const response = await fetch('api.php?action=get_sent');
+            const response = await fetch('api.php?action=get_notifications', { credentials: 'same-origin' });
             if (!response.ok) return;
 
             const data = await response.json();
-            const sent = data.sent || [];
+            const notifications = data.notifications || [];
 
-            renderSentInvitations(sent);
+            // Mettre à jour le badge
+            updateBadge(notifications.length);
 
-        } catch {
-            sentPanel.innerHTML = '<p class="list-empty">Impossible de charger vos invitations.</p>';
+            // Détecter les nouvelles invitations et afficher un toast
+            notifications.forEach((notif) => {
+                if (!knownIds.has(notif.id)) {
+                    knownIds.add(notif.id);
+                    // Ne pas toaster si c'est le premier chargement (knownIds était vide)
+                    if (knownIds.size > notifications.length || knownIds.size === 1 && notifications.length === 1) {
+                        // Premier chargement : on ne toaste pas
+                    } else {
+                        Toast.show(`&#9993; ${notif.from_username} vous invite à jouer !`, 'warning');
+                    }
+                }
+            });
+
+            // Si le modal est ouvert, rafraîchir son contenu
+            if (modalOverlay.classList.contains('visible')) {
+                renderModal(notifications);
+            }
+
+        } catch (err) {
+            // Erreur réseau silencieuse (ne pas spammer la console)
         }
     }
 
-    function renderSentInvitations(sent) {
-        if (sent.length === 0) {
-            sentPanel.innerHTML = '<p class="list-empty">Aucune invitation envoyée pour l\'instant.</p>';
+    /* -------- Mise à jour du badge -------- */
+    function updateBadge(count) {
+        if (count > 0) {
+            notifBadge.textContent = count > 9 ? '9+' : count;
+            notifBadge.style.display = 'flex';
+            notifBtn.classList.add('has-notif');
+        } else {
+            notifBadge.style.display = 'none';
+            notifBtn.classList.remove('has-notif');
+        }
+    }
+
+    /* -------- Ouvrir le modal et charger les invitations -------- */
+    async function openModal() {
+        modalOverlay.classList.add('visible');
+
+        // Charger les invitations fraîches
+        try {
+            const response = await fetch('api.php?action=get_notifications', { credentials: 'same-origin' });
+            const data     = await response.json();
+            renderModal(data.notifications || []);
+        } catch {
+            modalBody.innerHTML = '<p class="list-empty">Impossible de charger les invitations.</p>';
+        }
+    }
+
+    /* -------- Fermer le modal -------- */
+    function closeModal() {
+        modalOverlay.classList.remove('visible');
+    }
+
+    /* -------- Rendu du contenu du modal -------- */
+    function renderModal(notifications) {
+        if (notifications.length === 0) {
+            modalBody.innerHTML = '<p class="list-empty">Aucune invitation en attente.</p>';
             return;
         }
 
-        sentPanel.innerHTML = '';
+        modalBody.innerHTML = '';
 
-        sent.forEach((inv, index) => {
+        notifications.forEach((notif) => {
             const item = document.createElement('div');
-            item.classList.add('invitation-item');
-            item.style.animationDelay = `${index * 0.04}s`;
-
-            // Formatage de la date
-            const date = new Date(inv.updated_at.replace(' ', 'T'));
-            const dateStr = date.toLocaleString('fr-FR', {
-                day:    '2-digit',
-                month:  '2-digit',
-                hour:   '2-digit',
-                minute: '2-digit'
-            });
+            item.classList.add('notif-item');
+            item.dataset.id = notif.id;
 
             item.innerHTML = `
-                <div class="invitation-to">&#9993; ${escapeHtml(inv.to_username)}</div>
-                <div class="invitation-status ${inv.status}">${statusLabel(inv.status)}</div>
-                <div class="invitation-time">${dateStr}</div>
+                <div class="notif-text">
+                    <strong>${escapeHtml(notif.from_username)}</strong>
+                    vous invite à jouer une partie !
+                </div>
+                <div class="notif-actions">
+                    <button class="btn btn-success btn-sm" data-action="accept" data-id="${notif.id}">
+                        &#10003; Accepter
+                    </button>
+                    <button class="btn btn-danger btn-sm" data-action="decline" data-id="${notif.id}">
+                        &#10007; Refuser
+                    </button>
+                </div>
             `;
 
-            sentPanel.appendChild(item);
+            // Gestion des clics sur les boutons
+            item.querySelectorAll('[data-action]').forEach((btn) => {
+                btn.addEventListener('click', () => respondToInvitation(notif.id, btn.dataset.action, item));
+            });
+
+            modalBody.appendChild(item);
         });
     }
 
-    /**
-     * Traduit le statut en libellé français.
-     * @param {string} status
-     * @returns {string}
-     */
-    function statusLabel(status) {
-        const labels = {
-            pending:  '⏳ En attente',
-            accepted: '✓ Acceptée',
-            declined: '✗ Refusée'
-        };
-        return labels[status] || status;
+    /* -------- Répondre à une invitation -------- */
+    async function respondToInvitation(invitationId, action, itemElement) {
+        const response = (action === 'accept') ? 'accepted' : 'declined';
+
+        try {
+            const formData = new FormData();
+            formData.append('invitation_id', invitationId);
+            formData.append('response', response);
+
+            const res  = await fetch('api.php?action=respond_invitation', { method: 'POST', credentials: 'same-origin', body: formData });
+            const data = await res.json();
+
+            if (data.success) {
+                // Supprimer l'élément du modal avec animation
+                itemElement.style.opacity = '0';
+                itemElement.style.transform = 'translateX(20px)';
+                itemElement.style.transition = 'all 0.3s ease';
+                setTimeout(() => itemElement.remove(), 300);
+
+                // Retirer de knownIds pour mettre à jour le badge
+                knownIds.delete(parseInt(invitationId));
+
+                // Toast de confirmation
+                const msg = (response === 'accepted')
+                    ? '&#10003; Partie acceptée ! Le jeu va démarrer...'
+                    : '&#10007; Invitation refusée.';
+                Toast.show(msg, response === 'accepted' ? 'success' : 'error');
+
+                // Forcer un poll pour rafraîchir le badge
+                poll();
+
+            } else {
+                Toast.show(data.error || 'Erreur.', 'error');
+            }
+        } catch {
+            Toast.show('Erreur réseau.', 'error');
+        }
     }
 
-    /* ============================================================
-       Rafraîchissement périodique des invitations envoyées
-       (pour voir si quelqu'un a répondu)
-       ============================================================ */
-    loadSentInvitations();
-    setInterval(loadSentInvitations, window.APP.pollInterval);
+    /* -------- Expose les méthodes utiles à d'autres modules -------- */
+    return { init, poll };
 
+})();
+
+/* ============================================================
+   Module Toast
+   ============================================================ */
+const Toast = (() => {
+
+    const container = document.getElementById('toast-container');
+
+    /**
+     * Affiche un toast.
+     * @param {string} message - HTML autorisé (icônes).
+     * @param {string} type    - 'success' | 'error' | 'warning' | ''
+     * @param {number} duration - Durée en ms (défaut 3500).
+     */
+    function show(message, type = '', duration = 3500) {
+        const toast = document.createElement('div');
+        toast.classList.add('toast');
+        if (type) toast.classList.add(type);
+        toast.innerHTML = message;
+
+        container.appendChild(toast);
+
+        // Suppression automatique
+        setTimeout(() => {
+            toast.style.opacity    = '0';
+            toast.style.transform  = 'translateX(20px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    return { show };
+
+})();
+
+/* ============================================================
+   Utilitaire d'échappement HTML
+   ============================================================ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/* ============================================================
+   Démarrage du module de notifications
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    Notifications.init();
 });

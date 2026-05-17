@@ -6,6 +6,9 @@
  *  - Affichage des invitations envoyées
  *
  * Dépend de : notifications.js (Toast, escapeHtml, Notifications)
+ *
+ * Important : tous les fetch incluent credentials: 'same-origin' pour que
+ * le navigateur envoie le cookie de session PHP avec chaque requête AJAX.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,8 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
         playerList.innerHTML = '<p class="list-empty">Recherche en cours…</p>';
 
         try {
-            const response = await fetch(`api.php?action=search_users&q=${encodeURIComponent(query)}`);
-            if (!response.ok) throw new Error('Erreur serveur');
+            const response = await fetch(
+                `api.php?action=search_users&q=${encodeURIComponent(query)}`,
+                { credentials: 'same-origin' } // envoie le cookie de session
+            );
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const data  = await response.json();
             const users = data.users || [];
@@ -63,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPlayerList(users);
 
         } catch (err) {
+            console.error('searchPlayers error:', err);
             playerList.innerHTML = '<p class="list-empty">Erreur lors de la recherche. Réessayez.</p>';
         }
     }
@@ -137,15 +145,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch('api.php?action=send_invitation', {
-                method: 'POST',
-                body: formData
+                method:      'POST',
+                credentials: 'same-origin', // envoie le cookie de session
+                body:        formData
             });
 
             const data = await response.json();
 
             if (data.success) {
                 Toast.show(`&#9993; Invitation envoyée à <strong>${escapeHtml(toUsername)}</strong> !`, 'success');
-                btnElement.textContent = '&#10003; Envoyé';
+                btnElement.innerHTML = '&#10003; Envoyé';
                 // Rafraîchir la liste des invitations envoyées
                 loadSentInvitations();
             } else {
@@ -155,7 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnElement.innerHTML = '&#9993; Inviter';
             }
 
-        } catch {
+        } catch (err) {
+            console.error('sendInvitation error:', err);
             Toast.show('Erreur réseau. Réessayez.', 'error');
             btnElement.disabled = false;
             btnElement.innerHTML = '&#9993; Inviter';
@@ -167,7 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
        ============================================================ */
     async function loadSentInvitations() {
         try {
-            const response = await fetch('api.php?action=get_sent');
+            const response = await fetch('api.php?action=get_sent', {
+                credentials: 'same-origin' // envoie le cookie de session
+            });
+
             if (!response.ok) return;
 
             const data = await response.json();
@@ -175,7 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderSentInvitations(sent);
 
-        } catch {
+        } catch (err) {
+            console.error('loadSentInvitations error:', err);
             sentPanel.innerHTML = '<p class="list-empty">Impossible de charger vos invitations.</p>';
         }
     }
