@@ -21,7 +21,7 @@ $currentId   = $currentId   ?? getCurrentUserId();
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mon Profil — GameLobby</title>
+    <title>Mon Profil — unTCG</title>
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
     <link rel="stylesheet" href="css/profile.css" />
@@ -40,7 +40,7 @@ $currentId   = $currentId   ?? getCurrentUserId();
 
     <!-- -------- Navbar (identique au dashboard) -------- -->
     <nav class="navbar">
-        <span class="navbar-brand">GAMELOBBY</span>
+        <span class="navbar-brand">unTCG</span>
         <div class="navbar-user">
             <span class="navbar-username">
                 Connecté en tant que <span id="nav-username"><?= htmlspecialchars($currentUser) ?></span>

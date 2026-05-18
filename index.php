@@ -34,6 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = login($_POST['username'] ?? '', $_POST['password'] ?? '');
         if (isset($result['error'])) {
             $error = $result['error'];
+            // Forcer l'affichage de la page login avec le message d'erreur
+            $_GET['page'] = 'login';
         } else {
             // Redirection propre après login pour éviter le re-envoi du formulaire
             header('Location: index.php');
@@ -49,6 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         if (isset($result['error'])) {
             $error = $result['error'];
+            // Forcer l'affichage de la page signup avec le message d'erreur
+            $_GET['page'] = 'signup';
         } else {
             // Inscription réussie : la session est déjà ouverte dans signup().
             // On redirige directement vers le dashboard.

@@ -54,6 +54,7 @@ switch ($action) {
             SELECT
                 id,
                 username,
+                avatar_path,
                 (last_seen >= DATE_SUB(NOW(), INTERVAL 2 MINUTE)) AS online
             FROM users
             WHERE username LIKE :q

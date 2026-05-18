@@ -579,3 +579,37 @@
         align-items: flex-start;
     }
 }
+
+/* ============================================================
+   Avatars dans les résultats de recherche
+   ============================================================ */
+
+/* Image uploadée */
+.player-avatar-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 1px solid var(--clr-border-light);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+/* Fallback : initiale + fond coloré */
+.player-avatar-initial {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--clr-border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+    text-transform: uppercase;
+}

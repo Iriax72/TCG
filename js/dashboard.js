@@ -89,15 +89,22 @@ document.addEventListener('DOMContentLoaded', () => {
         users.forEach((user, index) => {
             const isOnline = parseInt(user.online) === 1;
 
-            // Initiale pour l'avatar
-            const initial = user.username.charAt(0).toUpperCase();
+            // Avatar : image uploadée si disponible, sinon initiale + couleur
+            const avatarHtml = user.avatar_path
+                ? `<img
+                       src="${escapeHtml(user.avatar_path)}"
+                       alt="${escapeHtml(user.username)}"
+                       class="player-avatar-img"
+                       onerror="this.replaceWith(buildInitialAvatar('${escapeHtml(user.username)}'))"
+                   />`
+                : buildInitialAvatar(user.username).outerHTML;
 
             const item = document.createElement('div');
             item.classList.add('player-item');
             item.style.animationDelay = `${index * 0.05}s`;
 
             item.innerHTML = `
-                <div class="player-avatar">${escapeHtml(initial)}</div>
+                <div class="player-avatar">${avatarHtml}</div>
                 <div class="player-info">
                     <div class="player-name">${escapeHtml(user.username)}</div>
                     <div class="player-status-text">
@@ -123,6 +130,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             playerList.appendChild(item);
         });
+    }
+
+    /* ============================================================
+       Construction d'un avatar initiale + couleur déterministe
+       (réutilisé dans la liste de joueurs si pas de photo uploadée)
+       ============================================================ */
+    function buildInitialAvatar(username) {
+        const div = document.createElement('div');
+        div.className   = 'player-avatar-initial';
+        div.textContent = (username.charAt(0) || '?').toUpperCase();
+        div.style.background = usernameToColor(username);
+        return div;
+    }
+
+    function usernameToColor(username) {
+        let hash = 5381;
+        for (let i = 0; i < username.length; i++) {
+            hash = ((hash << 5) + hash) + username.charCodeAt(i);
+            hash = hash & hash;
+        }
+        const hue = Math.abs(hash) % 360;
+        return `hsl(${hue}, 45%, 28%)`;
     }
 
     /* ============================================================

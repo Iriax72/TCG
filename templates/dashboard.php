@@ -22,7 +22,7 @@ $currentId   = $currentId   ?? getCurrentUserId();
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lobby — GameLobby</title>
+    <title>Lobby — unTCG</title>
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
 </head>
@@ -47,7 +47,7 @@ $currentId   = $currentId   ?? getCurrentUserId();
 
     <!-- -------- Barre de navigation -------- -->
     <nav class="navbar">
-        <span class="navbar-brand">&#9679; GAMELOBBY</span>
+        <span class="navbar-brand">&#9679; unTCG</span>
 
         <div class="navbar-user">
             <!-- Bouton notifications -->

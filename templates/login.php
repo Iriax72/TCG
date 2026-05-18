@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Connexion — GameLobby</title>
+    <title>Connexion — unTCG</title>
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/auth.css" />
 </head>
@@ -13,7 +13,7 @@
 
         <!-- En-tête -->
         <div class="auth-header">
-            <span class="auth-logo">GAMELOBBY</span>
+            <span class="auth-logo">unTCG</span>
             <span class="auth-logo-line"></span>
             <p class="auth-title">Connexion</p>
         </div>
