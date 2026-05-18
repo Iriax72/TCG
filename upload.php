@@ -140,8 +140,19 @@ imagedestroy($source);
 
 // --- 8. Génération d'un nom de fichier aléatoire ---
 // Le nom original de l'utilisateur est complètement ignoré.
-// On stocke toujours en JPEG pour uniformiser et simplifier la gestion.
+// On stocke toujours en JPEG pour uniformiser (re-encodage GD déjà fait).
+// Le nom est un token aléatoire de 32 caractères hexadécimaux + extension forcée.
 $newFilename = bin2hex(random_bytes(16)) . '.jpg';
+
+// Vérification paranoïaque : s'assurer que l'extension finale n'est jamais PHP
+// ou tout autre type exécutable, même en cas de bug dans le code ci-dessus.
+$dangerousExtensions = ['php', 'php3', 'php4', 'php5', 'php7', 'phtml',
+                        'phar', 'pl', 'py', 'cgi', 'sh', 'htaccess'];
+$ext = strtolower(pathinfo($newFilename, PATHINFO_EXTENSION));
+if (in_array($ext, $dangerousExtensions, true)) {
+    echo json_encode(['error' => 'Extension de fichier refusée par sécurité.']);
+    exit;
+}
 
 // Création du dossier si absent
 if (!is_dir(UPLOAD_DIR)) {
