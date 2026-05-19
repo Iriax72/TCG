@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             cell.innerHTML = `
                 <img
-                    src="assets/cards/${cardId}.png"
+                    src="assets/cards/${cardId}.webp"
                     alt="Carte ${cardId}"
                     class="card-img"
                     loading="lazy"

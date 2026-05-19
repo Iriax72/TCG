@@ -276,7 +276,7 @@ switch ($action) {
     // ------------------------------------------------------------------
     // Retourner la liste des IDs de cartes disponibles
     // PHP lit le dossier /assets/cards/ et retourne les IDs trouvés.
-    // Extensible sans modification de code : ajouter des .png suffit.
+    // Extensible sans modification de code : ajouter des .webp suffit.
     // ------------------------------------------------------------------
     case 'get_cards':
         $cardsDir = __DIR__ . '/assets/cards/';
@@ -284,8 +284,8 @@ switch ($action) {
 
         if (is_dir($cardsDir)) {
             foreach (scandir($cardsDir) as $file) {
-                // On ne garde que les fichiers .png dont le nom est un entier positif
-                if (preg_match('/^(\d+)\.png$/i', $file, $m)) {
+                // On ne garde que les fichiers .webp dont le nom est un entier positif
+                if (preg_match('/^(\d+)\.webp$/i', $file, $m)) {
                     $cardIds[] = (int) $m[1];
                 }
             }
