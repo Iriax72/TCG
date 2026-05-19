@@ -3,45 +3,50 @@
  * upload.php
  * Gestion sécurisée de l'upload de photo de profil.
  *
- * Pipeline de sécurité appliqué à chaque image :
- *  1. Vérification que l'utilisateur est connecté
- *  2. Vérification taille brute du fichier (UPLOAD_MAX_BYTES)
- *  3. Vérification du type MIME réel via finfo (pas la déclaration du navigateur)
- *  4. Vérification que PHP peut lire l'image (getimagesize)
- *  5. Vérification des dimensions min/max
- *  6. Re-encodage via GD → détruit toutes les métadonnées EXIF/XMP/IPTC
- *     et supprime tout code malveillant éventuellement caché dans les chunks
- *  7. Redimensionnement si l'image dépasse UPLOAD_MAX_WIDTH/HEIGHT
- *  8. Renommage en token aléatoire (bin2hex) — le nom original est ignoré
- *  9. Suppression de l'ancienne photo avant enregistrement du nouveau chemin
- * 10. Stockage du chemin relatif en base (jamais le chemin absolu serveur)
+ * Pipeline de sécurité :
+ *  1. Vérification authentification
+ *  2. Vérification taille brute (UPLOAD_MAX_BYTES)
+ *  3. Vérification MIME réel via getimagesize() — pas besoin de l'extension fileinfo
+ *  4. Vérification dimensions min/max
+ *  5. Re-encodage GD → supprime EXIF/XMP, détruit tout code caché
+ *  6. Redimensionnement si nécessaire
+ *  7. Renommage aléatoire (bin2hex + .jpg forcé)
+ *  8. Suppression de l'ancienne photo
+ *  9. Stockage du chemin relatif en base
  *
  * Réponse : JSON { success, avatar_url } ou { error }
  */
+
+// --- Suppression des erreurs PHP et tampon de sortie ---
+// Empêche tout warning PHP de corrompre la réponse JSON.
+ini_set('display_errors', '0');
+error_reporting(0);
+ob_start();
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+// Fonction utilitaire : vider le buffer et retourner une erreur JSON propre
+function jsonError(string $msg, int $code = 400): void {
+    http_response_code($code);
+    ob_clean();
+    echo json_encode(['error' => $msg]);
+    exit;
+}
+
 // --- 1. Authentification ---
 if (!isLoggedIn()) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Non authentifié.']);
-    exit;
+    jsonError('Non authentifié.', 401);
 }
 
-// --- Seules les requêtes POST sont acceptées ---
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Méthode non autorisée.']);
-    exit;
+    jsonError('Méthode non autorisée.', 405);
 }
 
-// --- Vérification de la présence du fichier ---
 if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] === UPLOAD_ERR_NO_FILE) {
-    echo json_encode(['error' => 'Aucun fichier reçu.']);
-    exit;
+    jsonError('Aucun fichier reçu.');
 }
 
 $file = $_FILES['avatar'];
@@ -56,60 +61,51 @@ if ($file['error'] !== UPLOAD_ERR_OK) {
         UPLOAD_ERR_CANT_WRITE => 'Impossible d\'écrire le fichier.',
         UPLOAD_ERR_EXTENSION  => 'Upload bloqué par une extension PHP.',
     ];
-    $msg = $phpErrors[$file['error']] ?? 'Erreur d\'upload inconnue.';
-    echo json_encode(['error' => $msg]);
-    exit;
+    jsonError($phpErrors[$file['error']] ?? 'Erreur d\'upload inconnue.');
 }
 
 if ($file['size'] > UPLOAD_MAX_BYTES) {
-    echo json_encode(['error' => 'Fichier trop volumineux. Maximum : ' . (UPLOAD_MAX_BYTES / 1024 / 1024) . ' Mo.']);
-    exit;
+    jsonError('Fichier trop volumineux. Maximum : ' . (UPLOAD_MAX_BYTES / 1024 / 1024) . ' Mo.');
 }
 
-// --- 3. Vérification du type MIME réel (finfo lit les magic bytes) ---
-$finfo    = new finfo(FILEINFO_MIME_TYPE);
-$mimeReal = $finfo->file($file['tmp_name']);
+// --- 3. Vérification MIME réel via getimagesize() ---
+// getimagesize() lit les magic bytes du fichier (pas l'extension déclarée)
+// et retourne le type MIME réel — sans avoir besoin de l'extension fileinfo.
+$imageInfo = @getimagesize($file['tmp_name']);
+
+if ($imageInfo === false) {
+    jsonError('Le fichier n\'est pas une image valide.');
+}
+
+$mimeReal  = $imageInfo['mime'];
+$width     = $imageInfo[0];
+$height    = $imageInfo[1];
 
 if (!in_array($mimeReal, UPLOAD_ALLOWED_MIME, true)) {
-    echo json_encode(['error' => 'Type de fichier non autorisé. Formats acceptés : JPG, PNG, WebP, GIF.']);
-    exit;
+    jsonError('Type de fichier non autorisé. Formats acceptés : JPG, PNG, WebP, GIF.');
 }
 
-// --- 4. Vérification que PHP peut décoder l'image ---
-$imageInfo = @getimagesize($file['tmp_name']);
-if ($imageInfo === false) {
-    echo json_encode(['error' => 'Le fichier n\'est pas une image valide.']);
-    exit;
-}
-
-[$width, $height, $imageType] = $imageInfo;
-
-// --- 5. Vérification des dimensions minimales ---
+// --- 4. Vérification des dimensions minimales ---
 if ($width < UPLOAD_MIN_WIDTH || $height < UPLOAD_MIN_HEIGHT) {
-    echo json_encode([
-        'error' => sprintf(
-            'Image trop petite. Dimensions minimales : %d×%d px.',
-            UPLOAD_MIN_WIDTH,
-            UPLOAD_MIN_HEIGHT
-        )
-    ]);
-    exit;
+    jsonError(sprintf(
+        'Image trop petite. Dimensions minimales : %d×%d px.',
+        UPLOAD_MIN_WIDTH,
+        UPLOAD_MIN_HEIGHT
+    ));
 }
 
-// --- 6 & 7. Re-encodage via GD (supprime EXIF + redimensionne si nécessaire) ---
-
-// Chargement de l'image source selon son type réel
-$source = match ($mimeReal) {
-    'image/jpeg' => @imagecreatefromjpeg($file['tmp_name']),
-    'image/png'  => @imagecreatefrompng($file['tmp_name']),
-    'image/webp' => @imagecreatefromwebp($file['tmp_name']),
-    'image/gif'  => @imagecreatefromgif($file['tmp_name']),
-    default      => false,
-};
+// --- 5 & 6. Re-encodage GD + redimensionnement ---
+// Chargement selon le MIME réel (pas l'extension du fichier)
+switch ($mimeReal) {
+    case 'image/jpeg': $source = @imagecreatefromjpeg($file['tmp_name']); break;
+    case 'image/png':  $source = @imagecreatefrompng($file['tmp_name']);  break;
+    case 'image/webp': $source = @imagecreatefromwebp($file['tmp_name']); break;
+    case 'image/gif':  $source = @imagecreatefromgif($file['tmp_name']);  break;
+    default:           $source = false;
+}
 
 if ($source === false) {
-    echo json_encode(['error' => 'Impossible de décoder l\'image. Fichier corrompu ?']);
-    exit;
+    jsonError('Impossible de décoder l\'image. Fichier corrompu ?');
 }
 
 // Calcul des dimensions de sortie (redimensionnement proportionnel si trop grand)
@@ -122,10 +118,9 @@ if ($outWidth > UPLOAD_MAX_WIDTH || $outHeight > UPLOAD_MAX_HEIGHT) {
     $outHeight = (int) round($outHeight * $ratio);
 }
 
-// Création d'un canvas propre (fond blanc pour les PNG transparents)
+// Canvas propre (gère la transparence PNG/WebP)
 $canvas = imagecreatetruecolor($outWidth, $outHeight);
 
-// Gestion de la transparence pour PNG et WebP
 if (in_array($mimeReal, ['image/png', 'image/webp'], true)) {
     imagealphablending($canvas, false);
     imagesavealpha($canvas, true);
@@ -134,43 +129,36 @@ if (in_array($mimeReal, ['image/png', 'image/webp'], true)) {
     imagealphablending($canvas, true);
 }
 
-// Redimensionnement avec rééchantillonnage de qualité
 imagecopyresampled($canvas, $source, 0, 0, 0, 0, $outWidth, $outHeight, $width, $height);
 imagedestroy($source);
 
-// --- 8. Génération d'un nom de fichier aléatoire ---
-// Le nom original de l'utilisateur est complètement ignoré.
-// On stocke toujours en JPEG pour uniformiser (re-encodage GD déjà fait).
-// Le nom est un token aléatoire de 32 caractères hexadécimaux + extension forcée.
+// --- 7. Génération d'un nom de fichier aléatoire ---
+// Toujours encodé en JPEG → supprime définitivement toutes les métadonnées.
+// Extension .jpg forcée, nom original de l'utilisateur complètement ignoré.
 $newFilename = bin2hex(random_bytes(16)) . '.jpg';
 
-// Vérification paranoïaque : s'assurer que l'extension finale n'est jamais PHP
-// ou tout autre type exécutable, même en cas de bug dans le code ci-dessus.
-$dangerousExtensions = ['php', 'php3', 'php4', 'php5', 'php7', 'phtml',
-                        'phar', 'pl', 'py', 'cgi', 'sh', 'htaccess'];
+// Vérification paranoïaque : jamais d'extension exécutable
+$dangerousExtensions = ['php','php3','php4','php5','php7','phtml',
+                        'phar','pl','py','cgi','sh','htaccess'];
 $ext = strtolower(pathinfo($newFilename, PATHINFO_EXTENSION));
 if (in_array($ext, $dangerousExtensions, true)) {
-    echo json_encode(['error' => 'Extension de fichier refusée par sécurité.']);
-    exit;
+    imagedestroy($canvas);
+    jsonError('Extension de fichier refusée par sécurité.');
 }
 
-// Création du dossier si absent
 if (!is_dir(UPLOAD_DIR)) {
     mkdir(UPLOAD_DIR, 0755, true);
 }
 
 $destPath = UPLOAD_DIR . $newFilename;
-
-// Encodage final en JPEG (supprime définitivement toutes les métadonnées)
-$saved = imagejpeg($canvas, $destPath, UPLOAD_JPEG_QUALITY);
+$saved    = imagejpeg($canvas, $destPath, UPLOAD_JPEG_QUALITY);
 imagedestroy($canvas);
 
 if (!$saved) {
-    echo json_encode(['error' => 'Échec de l\'enregistrement de l\'image sur le serveur.']);
-    exit;
+    jsonError('Échec de l\'enregistrement de l\'image sur le serveur.');
 }
 
-// --- 9. Suppression de l'ancienne photo ---
+// --- 8. Suppression de l'ancienne photo ---
 $pdo    = getDB();
 $userId = getCurrentUserId();
 
@@ -185,16 +173,15 @@ if ($user && !empty($user['avatar_path'])) {
     }
 }
 
-// --- 10. Enregistrement du chemin relatif en base ---
-// On stocke le chemin relatif depuis la racine du projet (jamais le chemin absolu).
+// --- 9. Enregistrement du chemin relatif en base ---
 $relativePath = UPLOAD_URL . $newFilename;
 
 $stmt = $pdo->prepare("UPDATE users SET avatar_path = :path WHERE id = :id");
 $stmt->execute([':path' => $relativePath, ':id' => $userId]);
 
-// Mise à jour de last_seen
 updateLastSeen();
 
+ob_clean();
 echo json_encode([
     'success'    => true,
     'avatar_url' => $relativePath,

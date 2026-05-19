@@ -14,6 +14,12 @@
  *   - get_profile        : récupérer les données de profil
  */
 
+// --- Suppression des erreurs PHP et tampon de sortie ---
+// Sans cela, un warning PHP corrompt la réponse JSON (SyntaxError côté JS).
+ini_set('display_errors', '0');
+error_reporting(0);
+ob_start();
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth.php';
 
@@ -31,6 +37,8 @@ if (!isLoggedIn()) {
 }
 
 $action = $_REQUEST['action'] ?? '';
+
+try {
 
 switch ($action) {
 
@@ -270,4 +278,11 @@ switch ($action) {
         http_response_code(400);
         echo json_encode(['error' => 'Action inconnue.']);
         break;
+}
+
+} catch (Throwable $e) {
+    // Capturer toute exception non prévue et la retourner en JSON
+    http_response_code(500);
+    ob_clean();
+    echo json_encode(['error' => 'Erreur serveur : ' . $e->getMessage()]);
 }
