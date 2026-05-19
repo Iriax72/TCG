@@ -76,7 +76,7 @@ function initDatabase(): void {
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS users (
             id          INT AUTO_INCREMENT PRIMARY KEY,
-            username    VARCHAR(32) NOT NULL UNIQUE,
+            username    VARCHAR(32)  NOT NULL UNIQUE,
             password    VARCHAR(255) NOT NULL,
             bio         TEXT         DEFAULT NULL,
             avatar_path VARCHAR(512) DEFAULT NULL,
@@ -84,6 +84,15 @@ function initDatabase(): void {
             last_seen   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
+
+    // Migration : ajouter les colonnes si la table existait déjà sans elles
+    foreach (['bio TEXT DEFAULT NULL', 'avatar_path VARCHAR(512) DEFAULT NULL'] as $colDef) {
+        $colName = explode(' ', $colDef)[0];
+        $rows = $pdo->query("SHOW COLUMNS FROM users LIKE '$colName'")->fetchAll();
+        if (empty($rows)) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN $colDef");
+        }
+    }
 
     // Table des invitations de partie
     // status : 'pending' | 'accepted' | 'declined'
@@ -97,6 +106,33 @@ function initDatabase(): void {
             updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (to_user_id)   REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+
+    // Table des decks de cartes
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS decks (
+            id         INT AUTO_INCREMENT PRIMARY KEY,
+            user_id    INT         NOT NULL,
+            name       VARCHAR(64) NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+
+    // Table du contenu des decks
+    // card_id est l'identifiant numérique de la carte (nom du fichier image).
+    // quantity : nombre de copies de cette carte dans ce deck.
+    // Pas de FK vers une table cards : les cartes sont définies par leurs fichiers image,
+    // ce qui permet d'en ajouter sans migration de base de données.
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS deck_cards (
+            deck_id  INT NOT NULL,
+            card_id  INT NOT NULL,
+            quantity INT NOT NULL DEFAULT 1,
+            PRIMARY KEY (deck_id, card_id),
+            FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
 }

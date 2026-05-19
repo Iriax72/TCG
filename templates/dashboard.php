@@ -56,6 +56,9 @@ $currentId   = $currentId   ?? getCurrentUserId();
                 <span class="notif-badge" id="notif-badge"></span>
             </button>
 
+            <!-- Bouton decks -->
+            <a href="index.php?view=decks" class="navbar-logout" title="Mes Decks">&#9830; Decks</a>
+
             <!-- Bouton profil -->
             <a href="index.php?view=profile" class="navbar-logout" title="Mon profil">&#9812; Profil</a>
 

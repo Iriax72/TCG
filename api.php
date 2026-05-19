@@ -274,6 +274,182 @@ switch ($action) {
         break;
 
     // ------------------------------------------------------------------
+    // Retourner la liste des IDs de cartes disponibles
+    // PHP lit le dossier /assets/cards/ et retourne les IDs trouvés.
+    // Extensible sans modification de code : ajouter des .png suffit.
+    // ------------------------------------------------------------------
+    case 'get_cards':
+        $cardsDir = __DIR__ . '/assets/cards/';
+        $cardIds  = [];
+
+        if (is_dir($cardsDir)) {
+            foreach (scandir($cardsDir) as $file) {
+                // On ne garde que les fichiers .png dont le nom est un entier positif
+                if (preg_match('/^(\d+)\.png$/i', $file, $m)) {
+                    $cardIds[] = (int) $m[1];
+                }
+            }
+            sort($cardIds);
+        }
+
+        echo json_encode(['cards' => $cardIds]);
+        break;
+
+    // ------------------------------------------------------------------
+    // Lister les decks de l'utilisateur connecté
+    // ------------------------------------------------------------------
+    case 'get_decks':
+        $userId = getCurrentUserId();
+        $pdo    = getDB();
+
+        // On récupère aussi le nombre de cartes (toutes copies confondues) pour affichage
+        $stmt = $pdo->prepare("
+            SELECT
+                d.id,
+                d.name,
+                d.updated_at,
+                COALESCE(SUM(dc.quantity), 0) AS card_count
+            FROM decks d
+            LEFT JOIN deck_cards dc ON dc.deck_id = d.id
+            WHERE d.user_id = :uid
+            GROUP BY d.id, d.name, d.updated_at
+            ORDER BY d.updated_at DESC
+        ");
+        $stmt->execute([':uid' => $userId]);
+        $decks = $stmt->fetchAll();
+
+        echo json_encode(['decks' => $decks]);
+        break;
+
+    // ------------------------------------------------------------------
+    // Récupérer le détail d'un deck (nom + liste des cartes)
+    // Paramètres GET : deck_id
+    // ------------------------------------------------------------------
+    case 'get_deck':
+        $deckId = (int) ($_GET['deck_id'] ?? 0);
+        $userId = getCurrentUserId();
+        $pdo    = getDB();
+
+        // Vérifier que ce deck appartient à l'utilisateur
+        $stmt = $pdo->prepare("SELECT id, name FROM decks WHERE id = :id AND user_id = :uid");
+        $stmt->execute([':id' => $deckId, ':uid' => $userId]);
+        $deck = $stmt->fetch();
+
+        if (!$deck) {
+            echo json_encode(['error' => 'Deck introuvable.']);
+            exit;
+        }
+
+        $stmt = $pdo->prepare("SELECT card_id, quantity FROM deck_cards WHERE deck_id = :id");
+        $stmt->execute([':id' => $deckId]);
+        $cards = $stmt->fetchAll();
+
+        echo json_encode(['deck' => $deck, 'cards' => $cards]);
+        break;
+
+    // ------------------------------------------------------------------
+    // Créer ou mettre à jour un deck
+    // Paramètres POST : deck_id (0 = nouveau), name, cards (JSON)
+    // cards est un objet { card_id: quantity, ... }
+    // ------------------------------------------------------------------
+    case 'save_deck':
+        $userId  = getCurrentUserId();
+        $pdo     = getDB();
+        $deckId  = (int) ($_POST['deck_id'] ?? 0);
+        $name    = trim($_POST['name'] ?? '');
+        $cardsJson = $_POST['cards'] ?? '{}';
+
+        if ($name === '') {
+            echo json_encode(['error' => 'Le deck doit avoir un nom.']);
+            exit;
+        }
+        if (mb_strlen($name) > 64) {
+            echo json_encode(['error' => 'Le nom du deck ne peut pas dépasser 64 caractères.']);
+            exit;
+        }
+
+        // Décoder et valider la liste de cartes
+        $cardsRaw = json_decode($cardsJson, true);
+        if (!is_array($cardsRaw)) {
+            echo json_encode(['error' => 'Liste de cartes invalide.']);
+            exit;
+        }
+
+        // Nettoyer : ne garder que les card_id entiers positifs avec quantity >= 1
+        $cards = [];
+        foreach ($cardsRaw as $cardId => $qty) {
+            $cardId = (int) $cardId;
+            $qty    = (int) $qty;
+            if ($cardId > 0 && $qty > 0) {
+                $cards[$cardId] = $qty;
+            }
+        }
+
+        $pdo->beginTransaction();
+        try {
+            if ($deckId > 0) {
+                // Mise à jour d'un deck existant — vérifier la propriété
+                $stmt = $pdo->prepare("SELECT id FROM decks WHERE id = :id AND user_id = :uid");
+                $stmt->execute([':id' => $deckId, ':uid' => $userId]);
+                if (!$stmt->fetch()) {
+                    $pdo->rollBack();
+                    echo json_encode(['error' => 'Deck introuvable.']);
+                    exit;
+                }
+                $stmt = $pdo->prepare("UPDATE decks SET name = :name, updated_at = NOW() WHERE id = :id");
+                $stmt->execute([':name' => $name, ':id' => $deckId]);
+            } else {
+                // Nouveau deck
+                $stmt = $pdo->prepare("INSERT INTO decks (user_id, name) VALUES (:uid, :name)");
+                $stmt->execute([':uid' => $userId, ':name' => $name]);
+                $deckId = (int) $pdo->lastInsertId();
+            }
+
+            // Remplacer toutes les cartes du deck (supprimer puis réinsérer)
+            $pdo->prepare("DELETE FROM deck_cards WHERE deck_id = :id")->execute([':id' => $deckId]);
+
+            if (!empty($cards)) {
+                $stmt = $pdo->prepare("
+                    INSERT INTO deck_cards (deck_id, card_id, quantity)
+                    VALUES (:deck_id, :card_id, :qty)
+                ");
+                foreach ($cards as $cardId => $qty) {
+                    $stmt->execute([':deck_id' => $deckId, ':card_id' => $cardId, ':qty' => $qty]);
+                }
+            }
+
+            $pdo->commit();
+            echo json_encode(['success' => true, 'deck_id' => $deckId, 'message' => 'Deck sauvegardé !']);
+
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+            echo json_encode(['error' => 'Erreur lors de la sauvegarde : ' . $e->getMessage()]);
+        }
+        break;
+
+    // ------------------------------------------------------------------
+    // Supprimer un deck
+    // Paramètres POST : deck_id
+    // ------------------------------------------------------------------
+    case 'delete_deck':
+        $deckId = (int) ($_POST['deck_id'] ?? 0);
+        $userId = getCurrentUserId();
+        $pdo    = getDB();
+
+        $stmt = $pdo->prepare("SELECT id FROM decks WHERE id = :id AND user_id = :uid");
+        $stmt->execute([':id' => $deckId, ':uid' => $userId]);
+        if (!$stmt->fetch()) {
+            echo json_encode(['error' => 'Deck introuvable.']);
+            exit;
+        }
+
+        // Les deck_cards sont supprimés en cascade (FK ON DELETE CASCADE)
+        $pdo->prepare("DELETE FROM decks WHERE id = :id")->execute([':id' => $deckId]);
+
+        echo json_encode(['success' => true, 'message' => 'Deck supprimé.']);
+        break;
+
+    // ------------------------------------------------------------------
     default:
         http_response_code(400);
         echo json_encode(['error' => 'Action inconnue.']);

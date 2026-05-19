@@ -1,0 +1,411 @@
+/* ============================================================
+   css/decks.css
+   Styles de la page de gestion des decks
+   Thème : Médiéval Fantasy sombre
+   ============================================================ */
+
+/* ============================================================
+   Layout de la page
+   ============================================================ */
+.decks-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.decks-content {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1.5rem;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    flex: 1;
+    /* Empêche le contenu de dépasser la fenêtre en hauteur */
+    max-height: calc(100vh - 62px);
+    overflow: hidden;
+}
+
+/* ============================================================
+   Panneau gauche : liste des decks
+   ============================================================ */
+.decks-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+}
+
+.decks-sidebar .panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.decks-sidebar .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Carte d'un deck dans la liste */
+.deck-item {
+    padding: 0.75rem 1rem;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--clr-border);
+    border-left: 3px solid var(--clr-wood-mid);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+    animation: item-in 0.2s ease both;
+}
+
+.deck-item:hover {
+    border-left-color: var(--clr-orange-light);
+    background: rgba(58, 35, 10, 0.4);
+}
+
+.deck-item.active {
+    border-left-color: var(--clr-orange);
+    background: rgba(80, 45, 10, 0.5);
+    box-shadow: inset 0 0 0 1px var(--clr-orange-dim);
+}
+
+.deck-item-name {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--clr-text-bright);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.deck-item-meta {
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--clr-text-muted);
+    margin-top: 0.15rem;
+}
+
+/* Bouton nouveau deck */
+.btn-new-deck {
+    width: 100%;
+    margin-bottom: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* Bouton supprimer deck */
+.btn-delete-deck {
+    width: 100%;
+    margin-top: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   Panneau droit : éditeur de deck
+   ============================================================ */
+.deck-editor {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.deck-editor .panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.deck-editor .panel-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+}
+
+/* ---- Barre du haut : nom + bouton sauvegarder ---- */
+.deck-editor-topbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.deck-editor-topbar input {
+    flex: 1;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1rem;
+    color: var(--clr-text-bright);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    outline: none;
+    box-shadow: var(--shadow-inset);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.deck-editor-topbar input:focus {
+    border-color: var(--clr-orange);
+    box-shadow: var(--shadow-inset), 0 0 0 2px var(--clr-orange-glow);
+}
+.deck-editor-topbar input::placeholder {
+    color: var(--clr-text-dim);
+    font-style: italic;
+    font-weight: 400;
+    font-family: var(--font-body);
+}
+
+/* Compteur de cartes dans le deck */
+.deck-card-count {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--clr-text-muted);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.deck-card-count span {
+    color: var(--clr-orange-light);
+}
+
+/* Message de sauvegarde */
+.deck-save-status {
+    font-size: 0.85rem;
+    font-style: italic;
+    min-height: 1.1rem;
+    flex-shrink: 0;
+}
+.deck-save-status.success { color: var(--clr-success); }
+.deck-save-status.error   { color: var(--clr-error); }
+
+/* ---- Barre de recherche / filtre cartes ---- */
+.card-filter-bar {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.card-filter-bar input {
+    flex: 1;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.85rem;
+    color: var(--clr-text-bright);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    outline: none;
+    box-shadow: var(--shadow-inset);
+    transition: border-color var(--transition);
+}
+.card-filter-bar input:focus {
+    border-color: var(--clr-orange);
+}
+.card-filter-bar input::placeholder {
+    color: var(--clr-text-dim);
+    font-style: italic;
+}
+
+/* ---- Grille de cartes ---- */
+.card-grid-wrap {
+    flex: 1;
+    overflow-y: auto;
+    /* Léger padding pour que les ombres ne soient pas coupées */
+    padding: 0.5rem 0.25rem;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.6rem;
+}
+
+/* Une carte dans la grille */
+.card-cell {
+    position: relative;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    border: 2px solid transparent;
+    transition: all var(--transition);
+    aspect-ratio: 2 / 3; /* ratio portrait standard pour une carte */
+    overflow: hidden;
+    background: var(--clr-surface-2);
+}
+
+.card-cell:hover {
+    border-color: var(--clr-orange-light);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.6), var(--shadow-orange);
+    z-index: 2;
+}
+
+/* Carte déjà dans le deck : bordure bleue */
+.card-cell.in-deck {
+    border-color: var(--clr-blue-light);
+    box-shadow: 0 0 8px var(--clr-blue-glow);
+}
+
+.card-cell.in-deck:hover {
+    border-color: var(--clr-orange-light);
+}
+
+/* Image de la carte */
+.card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    /* Évite le flash de chargement */
+    background: var(--clr-surface-3);
+}
+
+/* Badge quantité en haut à droite */
+.card-qty-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--clr-blue);
+    color: white;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.7);
+    pointer-events: none;
+    /* Caché si quantity = 0 */
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.15s ease;
+}
+
+.card-cell.in-deck .card-qty-badge {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Overlay +/- au survol */
+.card-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.card-cell:hover .card-overlay {
+    opacity: 1;
+}
+
+.card-overlay-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background var(--transition);
+}
+.card-overlay-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+.card-overlay-btn.add  { background: rgba(42,111,168,0.5); }
+.card-overlay-btn.add:hover  { background: rgba(42,111,168,0.8); }
+.card-overlay-btn.remove { background: rgba(150,40,40,0.5); }
+.card-overlay-btn.remove:hover { background: rgba(150,40,40,0.8); }
+
+/* Placeholder si image absente */
+.card-img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    color: var(--clr-text-dim);
+    background: var(--clr-surface-3);
+    text-align: center;
+    padding: 0.25rem;
+}
+
+/* Message grille vide */
+.card-grid-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: var(--clr-text-muted);
+    font-style: italic;
+}
+
+/* ============================================================
+   État : éditeur vide (aucun deck sélectionné / nouveau)
+   ============================================================ */
+.deck-editor-placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: var(--clr-text-muted);
+    font-style: italic;
+    font-size: 1rem;
+}
+
+.deck-editor-placeholder .placeholder-icon {
+    font-size: 2.5rem;
+    opacity: 0.4;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 1000px) {
+    .decks-content {
+        grid-template-columns: 1fr;
+        max-height: none;
+        overflow: auto;
+    }
+    .card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .decks-content {
+        padding: 0.75rem;
+    }
+    .card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+    }
+}
