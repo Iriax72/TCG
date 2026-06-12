@@ -450,6 +450,116 @@ switch ($action) {
         break;
 
     // ------------------------------------------------------------------
+    // Lister les decks préconstruits disponibles
+    // Lit /decks/prebuilt.json et retourne uniquement le nom et la
+    // description de chaque deck (pas le contenu, inutile côté client
+    // avant l'import).
+    // ------------------------------------------------------------------
+    case 'get_prebuilt_decks':
+        $jsonPath = __DIR__ . '/decks/prebuilt.json';
+
+        if (!is_file($jsonPath)) {
+            echo json_encode(['decks' => []]);
+            exit;
+        }
+
+        $raw  = file_get_contents($jsonPath);
+        $data = json_decode($raw, true);
+
+        if (!is_array($data)) {
+            echo json_encode(['decks' => []]);
+            exit;
+        }
+
+        // On ne renvoie que les infos utiles à l'affichage de la liste,
+        // avec leur index (utilisé ensuite pour l'import).
+        $list = [];
+        foreach ($data as $index => $deck) {
+            $list[] = [
+                'index'       => $index,
+                'name'        => $deck['name']        ?? 'Deck sans nom',
+                'description' => $deck['description'] ?? '',
+                'card_count'  => is_array($deck['cards'] ?? null)
+                    ? array_sum($deck['cards'])
+                    : 0,
+            ];
+        }
+
+        echo json_encode(['decks' => $list]);
+        break;
+
+    // ------------------------------------------------------------------
+    // Importer un deck préconstruit dans la collection de l'utilisateur
+    // Paramètres POST : index (position dans prebuilt.json)
+    // Crée un nouveau deck appartenant à l'utilisateur, avec les mêmes
+    // cartes que le deck préconstruit.
+    // ------------------------------------------------------------------
+    case 'import_prebuilt_deck':
+        $index  = (int) ($_POST['index'] ?? -1);
+        $userId = getCurrentUserId();
+        $pdo    = getDB();
+
+        $jsonPath = __DIR__ . '/decks/prebuilt.json';
+
+        if (!is_file($jsonPath)) {
+            echo json_encode(['error' => 'Aucun deck préconstruit disponible.']);
+            exit;
+        }
+
+        $data = json_decode(file_get_contents($jsonPath), true);
+
+        if (!is_array($data) || !isset($data[$index])) {
+            echo json_encode(['error' => 'Deck préconstruit introuvable.']);
+            exit;
+        }
+
+        $prebuilt = $data[$index];
+        $name     = trim($prebuilt['name'] ?? 'Deck préconstruit');
+        $cards    = is_array($prebuilt['cards'] ?? null) ? $prebuilt['cards'] : [];
+
+        // Nettoyage : ne garder que les card_id entiers positifs avec quantity >= 1
+        $cleanCards = [];
+        foreach ($cards as $cardId => $qty) {
+            $cardId = (int) $cardId;
+            $qty    = (int) $qty;
+            if ($cardId > 0 && $qty > 0) {
+                $cleanCards[$cardId] = $qty;
+            }
+        }
+
+        $pdo->beginTransaction();
+        try {
+            // Créer le nouveau deck pour l'utilisateur
+            $stmt = $pdo->prepare("INSERT INTO decks (user_id, name) VALUES (:uid, :name)");
+            $stmt->execute([':uid' => $userId, ':name' => $name]);
+            $deckId = (int) $pdo->lastInsertId();
+
+            // Insérer les cartes du deck préconstruit
+            if (!empty($cleanCards)) {
+                $stmt = $pdo->prepare("
+                    INSERT INTO deck_cards (deck_id, card_id, quantity)
+                    VALUES (:deck_id, :card_id, :qty)
+                ");
+                foreach ($cleanCards as $cardId => $qty) {
+                    $stmt->execute([':deck_id' => $deckId, ':card_id' => $cardId, ':qty' => $qty]);
+                }
+            }
+
+            $pdo->commit();
+            echo json_encode([
+                'success' => true,
+                'deck_id' => $deckId,
+                'name'    => $name,
+                'message' => 'Deck "' . $name . '" ajouté à votre collection !',
+            ]);
+
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+            echo json_encode(['error' => 'Erreur lors de l\'import : ' . $e->getMessage()]);
+        }
+        break;
+
+    // ------------------------------------------------------------------
     default:
         http_response_code(400);
         echo json_encode(['error' => 'Action inconnue.']);

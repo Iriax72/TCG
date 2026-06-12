@@ -25,6 +25,7 @@ $currentId   = $currentId   ?? getCurrentUserId();
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
     <link rel="stylesheet" href="css/decks.css" />
+    <?php include __DIR__ . "/_sw_register.php"; ?>
 </head>
 <body>
 
@@ -68,6 +69,11 @@ $currentId   = $currentId   ?? getCurrentUserId();
                     <h2>Mes Decks</h2>
                 </div>
                 <div class="panel-body">
+                    <!-- Bouton charger un deck préconstruit -->
+                    <button class="btn btn-ghost btn-prebuilt-deck" id="btn-prebuilt-deck">
+                        &#128218; Charger un deck préconstruit
+                    </button>
+
                     <!-- Bouton nouveau deck -->
                     <button class="btn btn-primary btn-new-deck" id="btn-new-deck">
                         &#43; Nouveau Deck
@@ -152,6 +158,19 @@ $currentId   = $currentId   ?? getCurrentUserId();
             <button class="modal-close" id="modal-close" aria-label="Fermer">&#x2715;</button>
         </div>
         <div class="modal-body" id="modal-body"></div>
+    </div>
+</div>
+
+<!-- Modal decks préconstruits -->
+<div class="modal-overlay" id="prebuilt-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="prebuilt-modal-title">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="prebuilt-modal-title">&#128218; Decks préconstruits</h3>
+            <button class="modal-close" id="prebuilt-modal-close" aria-label="Fermer">&#x2715;</button>
+        </div>
+        <div class="modal-body" id="prebuilt-modal-body">
+            <!-- Liste injectée par JS -->
+        </div>
     </div>
 </div>
 

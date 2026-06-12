@@ -26,6 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardFilter      = document.getElementById('card-filter');
     const cardGrid        = document.getElementById('card-grid');
 
+    // Modal "decks préconstruits"
+    const btnPrebuiltDeck     = document.getElementById('btn-prebuilt-deck');
+    const prebuiltOverlay     = document.getElementById('prebuilt-modal-overlay');
+    const prebuiltBody        = document.getElementById('prebuilt-modal-body');
+    const prebuiltClose       = document.getElementById('prebuilt-modal-close');
+
     /* ============================================================
        État local de l'éditeur
        ============================================================ */
@@ -398,6 +404,125 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearSaveStatus() {
         deckSaveStatus.textContent = '';
         deckSaveStatus.className   = 'deck-save-status';
+    }
+
+    /* ============================================================
+       Decks préconstruits — ouverture / fermeture de la modal
+       ============================================================ */
+    btnPrebuiltDeck.addEventListener('click', openPrebuiltModal);
+    prebuiltClose.addEventListener('click', closePrebuiltModal);
+
+    // Clic en dehors de la modal → fermer
+    prebuiltOverlay.addEventListener('click', (e) => {
+        if (e.target === prebuiltOverlay) closePrebuiltModal();
+    });
+
+    // Fermer avec Échap
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && prebuiltOverlay.classList.contains('visible')) {
+            closePrebuiltModal();
+        }
+    });
+
+    function openPrebuiltModal() {
+        prebuiltOverlay.classList.add('visible');
+        loadPrebuiltDecks();
+    }
+
+    function closePrebuiltModal() {
+        prebuiltOverlay.classList.remove('visible');
+    }
+
+    /* ============================================================
+       Chargement de la liste des decks préconstruits
+       ============================================================ */
+    async function loadPrebuiltDecks() {
+        prebuiltBody.innerHTML = '<p class="list-empty">Chargement...</p>';
+
+        try {
+            const res  = await fetch('api.php?action=get_prebuilt_decks', { credentials: 'same-origin' });
+            const data = await res.json();
+            renderPrebuiltDecks(data.decks || []);
+        } catch (err) {
+            console.error('loadPrebuiltDecks error:', err);
+            prebuiltBody.innerHTML = '<p class="list-empty">Erreur lors du chargement.</p>';
+        }
+    }
+
+    /* ============================================================
+       Affichage de la liste des decks préconstruits
+       ============================================================ */
+    function renderPrebuiltDecks(decks) {
+        if (decks.length === 0) {
+            prebuiltBody.innerHTML = '<p class="list-empty">Aucun deck préconstruit disponible.</p>';
+            return;
+        }
+
+        prebuiltBody.innerHTML = '';
+
+        decks.forEach((deck) => {
+            const item = document.createElement('div');
+            item.classList.add('notif-item');
+
+            item.innerHTML = `
+                <div class="notif-text">
+                    <strong>${escapeHtml(deck.name)}</strong><br />
+                    ${escapeHtml(deck.description)}<br />
+                    <span style="font-size:0.78rem; color: var(--clr-text-dim);">
+                        ${deck.card_count} carte(s)
+                    </span>
+                </div>
+                <div class="notif-actions">
+                    <button class="btn btn-success btn-sm" data-action="import" data-index="${deck.index}">
+                        &#43; Ajouter
+                    </button>
+                </div>
+            `;
+
+            item.querySelector('[data-action="import"]').addEventListener('click', (e) => {
+                importPrebuiltDeck(deck.index, e.currentTarget);
+            });
+
+            prebuiltBody.appendChild(item);
+        });
+    }
+
+    /* ============================================================
+       Import d'un deck préconstruit dans la collection de l'utilisateur
+       ============================================================ */
+    async function importPrebuiltDeck(index, btnElement) {
+        btnElement.disabled = true;
+        btnElement.textContent = 'Ajout...';
+
+        const formData = new FormData();
+        formData.append('index', index);
+
+        try {
+            const res  = await fetch('api.php?action=import_prebuilt_deck', {
+                method:      'POST',
+                credentials: 'same-origin',
+                body:        formData,
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                Toast.show('&#9830; ' + escapeHtml(data.message), 'success');
+                btnElement.innerHTML = '&#10003; Ajouté';
+
+                // Rafraîchir la liste des decks de l'utilisateur
+                await loadDecks();
+            } else {
+                Toast.show(data.error || 'Erreur lors de l\'import.', 'error');
+                btnElement.disabled = false;
+                btnElement.innerHTML = '&#43; Ajouter';
+            }
+
+        } catch (err) {
+            console.error('importPrebuiltDeck error:', err);
+            Toast.show('Erreur réseau. Réessayez.', 'error');
+            btnElement.disabled = false;
+            btnElement.innerHTML = '&#43; Ajouter';
+        }
     }
 
 });
