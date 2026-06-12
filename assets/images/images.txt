@@ -3,4 +3,6 @@ on a besoin de :
 - wood-texture.png
 - parchment.png
 - divider.png
-- logo.png
+- logo.png (celui qui est déjà mis esz temporaire)
+
+l'application fonctionne sans.
