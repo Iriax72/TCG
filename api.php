@@ -281,6 +281,12 @@ switch ($action) {
     case 'get_cards':
         $cardsDir = __DIR__ . '/assets/cards/';
         $cardIds  = [];
+        $debug    = [];
+
+        $debug['__DIR__']      = __DIR__;
+        $debug['cardsDir']     = $cardsDir;
+        $debug['dir_exists']   = is_dir($cardsDir);
+        $debug['raw_scandir']  = is_dir($cardsDir) ? scandir($cardsDir) : [];
 
         if (is_dir($cardsDir)) {
             foreach (scandir($cardsDir) as $file) {
@@ -292,7 +298,7 @@ switch ($action) {
             sort($cardIds);
         }
 
-        echo json_encode(['cards' => $cardIds]);
+        echo json_encode(['cards' => $cardIds, 'debug' => $debug]);
         break;
 
     // ------------------------------------------------------------------
