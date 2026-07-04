@@ -45,6 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCards();
     loadDecks();
 
+    // Désactiver le filtre tant que les cartes ne sont pas chargées
+    cardFilter.disabled = true;
+    cardFilter.placeholder = 'Chargement des cartes...';
+
     /* ============================================================
        Chargement des cartes disponibles
        ============================================================ */
@@ -53,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const res  = await fetch('api.php?action=get_cards', { credentials: 'same-origin' });
             const data = await res.json();
             allCardIds = data.cards || [];
+            // Réactiver le filtre maintenant que les cartes sont chargées
+            cardFilter.disabled = false;
+            cardFilter.placeholder = 'Filtrer par numéro de carte...';
             renderCardGrid(allCardIds);
         } catch (err) {
             console.error('loadCards error:', err);
@@ -115,7 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
         cardGrid.innerHTML = '';
 
         if (cardIds.length === 0) {
-            cardGrid.innerHTML = '<p class="card-grid-empty">Aucune carte trouvée.</p>';
+            // Distinguer "pas de cartes du tout" de "filtre sans résultat"
+            const msg = allCardIds.length === 0
+                ? 'Aucune carte disponible. Vérifiez que le dossier assets/cards/ contient des fichiers .webp.'
+                : 'Aucune carte ne correspond à ce filtre.';
+            cardGrid.innerHTML = `<p class="card-grid-empty">${msg}</p>`;
             return;
         }
 

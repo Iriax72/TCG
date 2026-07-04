@@ -456,9 +456,21 @@ switch ($action) {
     // avant l'import).
     // ------------------------------------------------------------------
     case 'get_prebuilt_decks':
-        $jsonPath = __DIR__ . '/decks/prebuilt.json';
+        // Chercher le fichier aux deux emplacements possibles :
+        // 1. /decks/prebuilt.json (emplacement recommandé)
+        // 2. /prebuilt.json       (racine du projet, fallback)
+        $jsonPath = null;
+        foreach ([
+            __DIR__ . '/decks/prebuilt.json',
+            __DIR__ . '/prebuilt.json',
+        ] as $candidate) {
+            if (is_file($candidate)) {
+                $jsonPath = $candidate;
+                break;
+            }
+        }
 
-        if (!is_file($jsonPath)) {
+        if ($jsonPath === null) {
             echo json_encode(['decks' => []]);
             exit;
         }
@@ -499,9 +511,18 @@ switch ($action) {
         $userId = getCurrentUserId();
         $pdo    = getDB();
 
-        $jsonPath = __DIR__ . '/decks/prebuilt.json';
+        $jsonPath = null;
+        foreach ([
+            __DIR__ . '/decks/prebuilt.json',
+            __DIR__ . '/prebuilt.json',
+        ] as $candidate) {
+            if (is_file($candidate)) {
+                $jsonPath = $candidate;
+                break;
+            }
+        }
 
-        if (!is_file($jsonPath)) {
+        if ($jsonPath === null) {
             echo json_encode(['error' => 'Aucun deck préconstruit disponible.']);
             exit;
         }
