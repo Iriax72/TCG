@@ -56,14 +56,20 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res  = await fetch('api.php?action=get_cards', { credentials: 'same-origin' });
             const data = await res.json();
-            allCardIds = data.cards || [];
+
+            if (!res.ok || data.error) {
+                throw new Error(data.error || `Erreur HTTP ${res.status}`);
+            }
+
+            allCardIds = Array.isArray(data.cards) ? data.cards : [];
             // Réactiver le filtre maintenant que les cartes sont chargées
             cardFilter.disabled = false;
             cardFilter.placeholder = 'Filtrer par numéro de carte...';
             renderCardGrid(allCardIds);
         } catch (err) {
             console.error('loadCards error:', err);
-            cardGrid.innerHTML = '<p class="card-grid-empty">Erreur lors du chargement des cartes.</p>';
+            const msg = err.message ? `: ${escapeHtml(err.message)}` : '';
+            cardGrid.innerHTML = `<p class="card-grid-empty">Erreur lors du chargement des cartes${msg}</p>`;
         }
     }
 
