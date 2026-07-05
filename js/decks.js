@@ -54,22 +54,30 @@ document.addEventListener('DOMContentLoaded', () => {
        ============================================================ */
     async function loadCards() {
         try {
-            const res  = await fetch('api.php?action=get_cards', { credentials: 'same-origin' });
-            const data = await res.json();
-
-            if (!res.ok || data.error) {
-                throw new Error(data.error || `Erreur HTTP ${res.status}`);
+            const res  = await fetch('api.php?action=get_cards');
+            // Vérifier que la réponse est bien du JSON avant de la parser
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (parseErr) {
+                console.error('loadCards JSON parse error:', parseErr, 'Response was:', text);
+                cardGrid.innerHTML = '<p class="card-grid-empty">Erreur lors du chargement des cartes.</p>';
+                return;
             }
 
-            allCardIds = Array.isArray(data.cards) ? data.cards : [];
+            if (!data.cards || data.cards.length === 0) {
+                console.warn('loadCards: no cards returned. Response:', data);
+            }
+
+            allCardIds = data.cards || [];
             // Réactiver le filtre maintenant que les cartes sont chargées
             cardFilter.disabled = false;
             cardFilter.placeholder = 'Filtrer par numéro de carte...';
             renderCardGrid(allCardIds);
         } catch (err) {
-            console.error('loadCards error:', err);
-            const msg = err.message ? `: ${escapeHtml(err.message)}` : '';
-            cardGrid.innerHTML = `<p class="card-grid-empty">Erreur lors du chargement des cartes${msg}</p>`;
+            console.error('loadCards fetch error:', err);
+            cardGrid.innerHTML = '<p class="card-grid-empty">Erreur lors du chargement des cartes.</p>';
         }
     }
 
