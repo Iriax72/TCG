@@ -26,17 +26,37 @@ require_once __DIR__ . '/auth.php';
 // --- En-têtes JSON ---
 header('Content-Type: application/json; charset=utf-8');
 
+$action = $_REQUEST['action'] ?? '';
+
+// --- get_cards est public : les IDs de cartes ne sont pas des données sensibles.
+// Traité avant la vérification d'authentification pour éviter tout problème de session.
+if ($action === 'get_cards') {
+    $cardsDir = __DIR__ . '/assets/cards/';
+    $cardIds  = [];
+
+    if (is_dir($cardsDir)) {
+        foreach (scandir($cardsDir) as $file) {
+            // On ne garde que les fichiers .webp dont le nom est un entier positif
+            if (preg_match('/^(\d+)\.webp$/i', $file, $m)) {
+                $cardIds[] = (int) $m[1];
+            }
+        }
+        sort($cardIds);
+    }
+
+    echo json_encode(['cards' => $cardIds]);
+    exit;
+}
+
 // --- Mise à jour du statut "en ligne" ---
 updateLastSeen();
 
-// --- Seuls les utilisateurs connectés peuvent utiliser l'API ---
+// --- Toutes les autres actions nécessitent d'être connecté ---
 if (!isLoggedIn()) {
     http_response_code(401);
     echo json_encode(['error' => 'Non authentifié.']);
     exit;
 }
-
-$action = $_REQUEST['action'] ?? '';
 
 try {
 
@@ -278,29 +298,6 @@ switch ($action) {
     // PHP lit le dossier /assets/cards/ et retourne les IDs trouvés.
     // Extensible sans modification de code : ajouter des .webp suffit.
     // ------------------------------------------------------------------
-    case 'get_cards':
-        $cardsDir = __DIR__ . '/assets/cards/';
-        $cardIds  = [];
-        $debug    = [];
-
-        $debug['__DIR__']      = __DIR__;
-        $debug['cardsDir']     = $cardsDir;
-        $debug['dir_exists']   = is_dir($cardsDir);
-        $debug['raw_scandir']  = is_dir($cardsDir) ? scandir($cardsDir) : [];
-
-        if (is_dir($cardsDir)) {
-            foreach (scandir($cardsDir) as $file) {
-                // On ne garde que les fichiers .webp dont le nom est un entier positif
-                if (preg_match('/^(\d+)\.webp$/i', $file, $m)) {
-                    $cardIds[] = (int) $m[1];
-                }
-            }
-            sort($cardIds);
-        }
-
-        echo json_encode(['cards' => $cardIds, 'debug' => $debug]);
-        break;
-
     // ------------------------------------------------------------------
     // Lister les decks de l'utilisateur connecté
     // ------------------------------------------------------------------
