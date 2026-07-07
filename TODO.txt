@@ -3,8 +3,6 @@ TODO:
 decks:
 - Ajouter des filtres de recherche de cartes par nom et mot-clé
   => Ajouter une table dans la db 'cards' avec les cartes, leur nom, leurs mots-clés, leur id
-- Améiorer àaffichage des cartes
-- Faire en sorte que le boutton 'supprimer le deck' fonctionne meme si le deck n'a pas de nom et n'est pas enregistré
 
 assets/cards:
 - Ajouter les nouvelles cartes ([102;infini[) au format .webp
