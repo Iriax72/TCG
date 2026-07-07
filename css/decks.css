@@ -417,3 +417,176 @@
         grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
     }
 }
+
+/* ============================================================
+   Modal de détail d'une carte
+   ============================================================ */
+.card-detail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 300;
+    display: none;       /* Affiché par JS via .visible */
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.card-detail-overlay.visible {
+    display: flex;
+    animation: detail-fadein 0.2s ease;
+}
+
+@keyframes detail-fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Image grande de la carte */
+.card-detail-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+}
+
+.card-detail-img {
+    max-height: 65vh;
+    max-width: min(90vw, 400px);
+    width: auto;
+    height: auto;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--clr-wood-mid);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.8), var(--shadow-orange);
+    animation: card-detail-in 0.25s ease;
+}
+
+@keyframes card-detail-in {
+    from { transform: scale(0.92); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+}
+
+/* Numéro de la carte */
+.card-detail-id {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--clr-text-muted);
+}
+
+/* Contrôles +/- quantité */
+.card-detail-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.card-qty-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    padding: 0;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.card-detail-qty-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    min-width: 50px;
+}
+
+#card-detail-qty {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--clr-text-bright);
+    line-height: 1;
+}
+
+.card-detail-qty-label {
+    font-size: 0.7rem;
+    font-style: italic;
+    color: var(--clr-text-muted);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+/* Boutons de navigation précédent / suivant */
+.card-detail-nav {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--clr-border-light);
+    color: var(--clr-text);
+    font-size: 2.5rem;
+    line-height: 1;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+    flex-shrink: 0;
+    padding: 0;
+}
+.card-detail-nav:hover {
+    border-color: var(--clr-orange-light);
+    color: var(--clr-orange-light);
+    background: rgba(58, 35, 10, 0.6);
+    transform: scale(1.08);
+}
+.card-detail-nav:disabled {
+    opacity: 0.2;
+    cursor: default;
+    transform: none;
+}
+
+/* Bouton fermer (X) */
+.card-detail-close {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.5rem;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--clr-border-light);
+    color: var(--clr-text-muted);
+    font-size: 1.3rem;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+    z-index: 1;
+    padding: 0;
+}
+.card-detail-close:hover {
+    border-color: var(--clr-error);
+    color: #e09090;
+    background: rgba(100,20,20,0.4);
+}
+
+/* ============================================================
+   Responsive carte détail
+   ============================================================ */
+@media (max-width: 600px) {
+    .card-detail-overlay {
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+    .card-detail-img {
+        max-height: 55vh;
+    }
+    .card-detail-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 1.8rem;
+    }
+}

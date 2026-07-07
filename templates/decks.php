@@ -103,7 +103,7 @@ $currentId   = $currentId   ?? getCurrentUserId();
                     </div>
 
                     <!-- Éditeur actif (caché au départ) -->
-                    <div id="editor-active" style="display:none; flex:1; overflow:hidden; flex-direction:column; gap:1rem;">
+                    <div id="editor-active" style="display:none; flex:1; overflow:hidden; flex-direction:column; gap:0.75rem;">
 
                         <!-- Nom du deck + compteur + sauvegarder -->
                         <div class="deck-editor-topbar">
@@ -124,6 +124,11 @@ $currentId   = $currentId   ?? getCurrentUserId();
                         <!-- Message de statut sauvegarde -->
                         <span class="deck-save-status" id="deck-save-status"></span>
 
+                        <!-- Bouton supprimer (au-dessus de la grille) -->
+                        <button class="btn btn-danger btn-delete-deck" id="btn-delete-deck">
+                            &#10007; Supprimer ce deck
+                        </button>
+
                         <!-- Filtre par ID de carte -->
                         <div class="card-filter-bar">
                             <input
@@ -134,7 +139,7 @@ $currentId   = $currentId   ?? getCurrentUserId();
                             />
                         </div>
 
-                        <!-- Grille de cartes (remplie par JS) -->
+                        <!-- Grille de cartes (remplie par JS, cliquer pour agrandir) -->
                         <div class="card-grid-wrap">
                             <div class="card-grid" id="card-grid">
                                 <p class="card-grid-empty">Chargement des cartes...</p>
@@ -172,6 +177,32 @@ $currentId   = $currentId   ?? getCurrentUserId();
             <!-- Liste injectée par JS -->
         </div>
     </div>
+</div>
+
+<!-- Modal détail d'une carte -->
+<div class="card-detail-overlay" id="card-detail-overlay">
+    <button class="card-detail-close" id="card-detail-close" title="Fermer">&#x2715;</button>
+    <button class="card-detail-nav card-detail-prev" id="card-detail-prev" title="Carte précédente">&#8249;</button>
+
+    <div class="card-detail-inner">
+        <!-- Image grande de la carte -->
+        <img class="card-detail-img" id="card-detail-img" src="" alt="Carte" />
+
+        <!-- Contrôles quantité -->
+        <div class="card-detail-controls">
+            <button class="btn btn-danger card-qty-btn" id="card-detail-remove" title="Retirer une copie">&#8722;</button>
+            <span class="card-detail-qty-display">
+                <span id="card-detail-qty">0</span>
+                <span class="card-detail-qty-label">dans le deck</span>
+            </span>
+            <button class="btn btn-primary card-qty-btn" id="card-detail-add" title="Ajouter une copie">&#43;</button>
+        </div>
+
+        <!-- Numéro de carte -->
+        <div class="card-detail-id" id="card-detail-id">#1</div>
+    </div>
+
+    <button class="card-detail-nav card-detail-next" id="card-detail-next" title="Carte suivante">&#8250;</button>
 </div>
 
 <!-- Toasts -->

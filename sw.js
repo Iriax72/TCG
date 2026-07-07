@@ -16,7 +16,7 @@
  *    → Network-only : jamais mises en cache, toujours fraîches.
  */
 
-const CACHE_VERSION  = 'v1';
+const CACHE_VERSION  = 'v2';
 const CACHE_CARDS    = `untcg-cards-${CACHE_VERSION}`;
 const CACHE_STATIC   = `untcg-static-${CACHE_VERSION}`;
 
