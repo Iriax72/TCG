@@ -16,7 +16,7 @@
  *    → Network-only : jamais mises en cache, toujours fraîches.
  */
 
-const CACHE_VERSION  = 'v2';
+const CACHE_VERSION  = 'v3';
 const CACHE_CARDS    = `untcg-cards-${CACHE_VERSION}`;
 const CACHE_STATIC   = `untcg-static-${CACHE_VERSION}`;
 
@@ -40,6 +40,8 @@ self.addEventListener('install', (event) => {
                 'js/notifications.js',
                 'js/profile.js',
                 'js/decks.js',
+                'js/game.js',
+                'css/game.css',
             ]);
         })
     );

@@ -54,6 +54,14 @@ const Notifications = (() => {
             const data = await response.json();
             const notifications = data.notifications || [];
 
+            // Si une partie vient d'être créée pour ce joueur → le rediriger.
+            // On vérifie qu'il n'est pas déjà sur la page de jeu pour éviter
+            // une boucle infinie de rechargements.
+            if (data.game_redirect && !window.location.search.includes('view=game')) {
+                window.location.href = `index.php?view=game&game_id=${data.game_redirect}`;
+                return;
+            }
+
             // Mettre à jour le badge
             updateBadge(notifications.length);
 
@@ -171,14 +179,17 @@ const Notifications = (() => {
                 // Retirer de knownIds pour mettre à jour le badge
                 knownIds.delete(parseInt(invitationId));
 
-                // Toast de confirmation
-                const msg = (response === 'accepted')
-                    ? '&#10003; Partie acceptée ! Le jeu va démarrer...'
-                    : '&#10007; Invitation refusée.';
-                Toast.show(msg, response === 'accepted' ? 'success' : 'error');
-
-                // Forcer un poll pour rafraîchir le badge
-                poll();
+                if (response === 'accepted' && data.game_id) {
+                    // Rediriger player B vers la table de jeu
+                    Toast.show('&#9876; Partie créée ! Redirection...', 'success');
+                    setTimeout(() => {
+                        window.location.href = `index.php?view=game&game_id=${data.game_id}`;
+                    }, 800);
+                } else {
+                    // Toast de confirmation pour un refus
+                    Toast.show('&#10007; Invitation refusée.', 'error');
+                    poll();
+                }
 
             } else {
                 Toast.show(data.error || 'Erreur.', 'error');

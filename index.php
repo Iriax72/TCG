@@ -84,6 +84,8 @@ if (isLoggedIn()) {
         include __DIR__ . '/templates/profile.php';
     } elseif ($view === 'decks') {
         include __DIR__ . '/templates/decks.php';
+    } elseif ($view === 'game') {
+        include __DIR__ . '/templates/game.php';
     } else {
         include __DIR__ . '/templates/dashboard.php';
     }

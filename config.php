@@ -135,4 +135,45 @@ function initDatabase(): void {
             FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
+
+    // Table des parties en cours
+    // player1 = celui qui a envoyé l'invitation, player2 = celui qui a accepté.
+    // player1_joined / player2_joined : le joueur a chargé la page de jeu.
+    // status : 'waiting' (créée, joueurs pas encore tous connectés)
+    //          'active'  (les deux joueurs sont connectés)
+    //          'finished'(partie terminée)
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS games (
+            id               INT AUTO_INCREMENT PRIMARY KEY,
+            invitation_id    INT NOT NULL UNIQUE,
+            player1_id       INT NOT NULL,
+            player2_id       INT NOT NULL,
+            status           ENUM('waiting','active','finished') DEFAULT 'waiting',
+            player1_joined   TINYINT NOT NULL DEFAULT 0,
+            player2_joined   TINYINT NOT NULL DEFAULT 0,
+            created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE CASCADE,
+            FOREIGN KEY (player1_id)    REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (player2_id)    REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+
+    // File d'événements de partie — utilisée par le canal SSE.
+    // Chaque action de jeu (coup, message, fin de partie…) est un événement.
+    // player_id NULL = événement serveur (début de partie, timer…).
+    // La précision à la milliseconde sur created_at garantit l'ordre même
+    // si plusieurs événements arrivent dans la même seconde.
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS game_events (
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            game_id     INT NOT NULL,
+            player_id   INT          DEFAULT NULL,
+            event_type  VARCHAR(64)  NOT NULL,
+            event_data  TEXT         DEFAULT NULL,
+            created_at  DATETIME(3)  DEFAULT CURRENT_TIMESTAMP(3),
+            FOREIGN KEY (game_id)   REFERENCES games(id) ON DELETE CASCADE,
+            FOREIGN KEY (player_id) REFERENCES users(id) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
 }

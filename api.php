@@ -177,8 +177,44 @@ switch ($action) {
         ");
         $stmt->execute([':status' => $response, ':id' => $invId]);
 
+        $gameId = null;
+
+        if ($response === 'accepted') {
+            // Récupérer les deux joueurs depuis l'invitation
+            $stmt = $pdo->prepare("SELECT from_user_id, to_user_id FROM invitations WHERE id = :id");
+            $stmt->execute([':id' => $invId]);
+            $inv = $stmt->fetch();
+
+            // Créer la partie (player1 = expéditeur, player2 = acceptant)
+            $stmt = $pdo->prepare("
+                INSERT INTO games (invitation_id, player1_id, player2_id)
+                VALUES (:inv_id, :p1, :p2)
+            ");
+            $stmt->execute([
+                ':inv_id' => $invId,
+                ':p1'     => $inv['from_user_id'],
+                ':p2'     => $inv['to_user_id'],
+            ]);
+            $gameId = (int) $pdo->lastInsertId();
+
+            // Insérer l'événement de démarrage (visible par les deux via SSE)
+            $stmt = $pdo->prepare("
+                INSERT INTO game_events (game_id, player_id, event_type, event_data)
+                VALUES (:gid, NULL, 'game_start', :data)
+            ");
+            $stmt->execute([
+                ':gid'  => $gameId,
+                ':data' => json_encode(['message' => 'La partie commence !']),
+            ]);
+        }
+
         $msg = ($response === 'accepted') ? 'Partie acceptée !' : 'Invitation refusée.';
-        echo json_encode(['success' => true, 'message' => $msg, 'response' => $response]);
+        echo json_encode([
+            'success'  => true,
+            'message'  => $msg,
+            'response' => $response,
+            'game_id'  => $gameId,   // null si refusé
+        ]);
         break;
 
     // ------------------------------------------------------------------
@@ -202,7 +238,39 @@ switch ($action) {
         $stmt->execute([':uid' => $userId]);
         $notifications = $stmt->fetchAll();
 
-        echo json_encode(['notifications' => $notifications]);
+        // Vérifier si le joueur a une partie en attente de redirection.
+        // On marque le joueur comme ayant rejoint pour éviter les boucles.
+        $pendingGameId = null;
+        $stmt = $pdo->prepare("
+            SELECT id,
+                   CASE WHEN player1_id = :uid THEN 'player1' ELSE 'player2' END AS role
+            FROM games
+            WHERE (player1_id = :uid2 OR player2_id = :uid3)
+              AND status = 'waiting'
+              AND (
+                  (player1_id = :uid4 AND player1_joined = 0)
+                  OR (player2_id = :uid5 AND player2_joined = 0)
+              )
+            ORDER BY created_at DESC
+            LIMIT 1
+        ");
+        $stmt->execute([
+            ':uid'  => $userId, ':uid2' => $userId, ':uid3' => $userId,
+            ':uid4' => $userId, ':uid5' => $userId,
+        ]);
+        $pendingGame = $stmt->fetch();
+
+        if ($pendingGame) {
+            $pendingGameId = $pendingGame['id'];
+            $col = ($pendingGame['role'] === 'player1') ? 'player1_joined' : 'player2_joined';
+            $pdo->prepare("UPDATE games SET $col = 1 WHERE id = :id")
+                ->execute([':id' => $pendingGameId]);
+        }
+
+        echo json_encode([
+            'notifications' => $notifications,
+            'game_redirect'  => $pendingGameId,
+        ]);
         break;
 
     // ------------------------------------------------------------------
@@ -450,6 +518,117 @@ switch ($action) {
         $pdo->prepare("DELETE FROM decks WHERE id = :id")->execute([':id' => $deckId]);
 
         echo json_encode(['success' => true, 'message' => 'Deck supprimé.']);
+        break;
+
+    // ------------------------------------------------------------------
+    // Récupérer les informations d'une partie (joueurs, statut)
+    // Paramètres GET : game_id
+    // Marque automatiquement le joueur comme connecté (joined).
+    // Si les deux joueurs sont connectés, passe la partie en 'active'.
+    // ------------------------------------------------------------------
+    case 'get_game_info':
+        $gameId = (int) ($_GET['game_id'] ?? 0);
+        $userId = getCurrentUserId();
+        $pdo    = getDB();
+
+        $stmt = $pdo->prepare("
+            SELECT g.*,
+                   u1.username    AS player1_name,
+                   u1.avatar_path AS player1_avatar,
+                   u2.username    AS player2_name,
+                   u2.avatar_path AS player2_avatar
+            FROM games g
+            JOIN users u1 ON u1.id = g.player1_id
+            JOIN users u2 ON u2.id = g.player2_id
+            WHERE g.id = :gid
+              AND (g.player1_id = :uid OR g.player2_id = :uid)
+        ");
+        $stmt->execute([':gid' => $gameId, ':uid' => $userId]);
+        $game = $stmt->fetch();
+
+        if (!$game) {
+            echo json_encode(['error' => 'Partie introuvable.']);
+            exit;
+        }
+
+        $role = ($game['player1_id'] == $userId) ? 'player1' : 'player2';
+
+        // Marquer le joueur comme connecté
+        $col = ($role === 'player1') ? 'player1_joined' : 'player2_joined';
+        if (!$game[$col]) {
+            $pdo->prepare("UPDATE games SET $col = 1 WHERE id = :id")
+                ->execute([':id' => $gameId]);
+            $game[$col] = 1;
+        }
+
+        // Si les deux joueurs sont connectés → passer en active
+        if ($game['player1_joined'] && $game['player2_joined'] && $game['status'] === 'waiting') {
+            $pdo->prepare("UPDATE games SET status = 'active' WHERE id = :id")
+                ->execute([':id' => $gameId]);
+            $game['status'] = 'active';
+            $pdo->prepare("
+                INSERT INTO game_events (game_id, player_id, event_type, event_data)
+                VALUES (:gid, NULL, 'game_active', :data)
+            ")->execute([
+                ':gid'  => $gameId,
+                ':data' => json_encode(['message' => 'Les deux joueurs sont connectés. La partie peut commencer !']),
+            ]);
+        }
+
+        echo json_encode(['game' => $game, 'role' => $role]);
+        break;
+
+    // ------------------------------------------------------------------
+    // Envoyer un événement de jeu (coup joué, action, message…)
+    // Paramètres POST : game_id, event_type, event_data (JSON string)
+    // L'événement est inséré dans game_events et immédiatement visible
+    // par les deux joueurs via le canal SSE.
+    // ------------------------------------------------------------------
+    case 'send_game_event':
+        $gameId    = (int) ($_POST['game_id']    ?? 0);
+        $eventType = trim($_POST['event_type']   ?? '');
+        $eventData = trim($_POST['event_data']   ?? '{}');
+        $userId    = getCurrentUserId();
+        $pdo       = getDB();
+
+        // Vérifier que l'utilisateur est bien dans cette partie
+        $stmt = $pdo->prepare("
+            SELECT id FROM games
+            WHERE id = :gid AND (player1_id = :uid OR player2_id = :uid)
+              AND status = 'active'
+        ");
+        $stmt->execute([':gid' => $gameId, ':uid' => $userId]);
+        if (!$stmt->fetch()) {
+            echo json_encode(['error' => 'Partie introuvable ou non active.']);
+            exit;
+        }
+
+        // Whitelist des types d'événements autorisés côté client
+        $allowedTypes = ['game_move', 'game_action', 'game_chat', 'game_end', 'game_ping'];
+        if (!in_array($eventType, $allowedTypes, true)) {
+            echo json_encode(['error' => 'Type d\'événement non autorisé.']);
+            exit;
+        }
+
+        // Valider que event_data est du JSON valide
+        $parsed = json_decode($eventData, true);
+        if (!is_array($parsed)) {
+            echo json_encode(['error' => 'event_data doit être un objet JSON valide.']);
+            exit;
+        }
+
+        $stmt = $pdo->prepare("
+            INSERT INTO game_events (game_id, player_id, event_type, event_data)
+            VALUES (:gid, :uid, :type, :data)
+        ");
+        $stmt->execute([
+            ':gid'  => $gameId,
+            ':uid'  => $userId,
+            ':type' => $eventType,
+            ':data' => json_encode($parsed),
+        ]);
+
+        echo json_encode(['success' => true, 'event_id' => (int) $pdo->lastInsertId()]);
         break;
 
     // ------------------------------------------------------------------

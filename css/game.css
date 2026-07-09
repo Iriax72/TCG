@@ -1,0 +1,365 @@
+/* ============================================================
+   css/game.css
+   Styles de la table de jeu
+   Thème : Médiéval Fantasy sombre
+   ============================================================ */
+
+/* ============================================================
+   Layout général
+   ============================================================ */
+.game-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.game-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+    max-height: calc(100vh - 62px); /* hauteur écran moins navbar */
+}
+
+/* ============================================================
+   Navbar de la table de jeu (plus sobre que le dashboard)
+   ============================================================ */
+.game-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    height: 62px;
+    background-color: var(--clr-wood-dark);
+    background-image:
+        url('../assets/images/wood-texture.png'),
+        var(--wood-gradient);
+    background-size: cover, auto;
+    background-blend-mode: multiply, normal;
+    border-bottom: 2px solid var(--clr-orange-dim);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    flex-shrink: 0;
+}
+
+.game-navbar-brand {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    color: var(--clr-text-bright);
+    text-shadow: 0 0 12px var(--clr-orange-glow);
+}
+
+.game-status-badge {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+}
+
+.game-status-badge.waiting  {
+    color: var(--clr-warning);
+    border-color: var(--clr-warning);
+    background: rgba(200,142,32,0.1);
+    animation: blink-status 1.5s ease-in-out infinite;
+}
+.game-status-badge.active   {
+    color: var(--clr-success);
+    border-color: var(--clr-success);
+    background: rgba(90,158,72,0.1);
+}
+.game-status-badge.finished {
+    color: var(--clr-text-muted);
+    border-color: var(--clr-border);
+    background: transparent;
+}
+
+@keyframes blink-status {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+/* ============================================================
+   Zone centrale : table de jeu
+   ============================================================ */
+.game-table-area {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--clr-surface);
+    background-image:
+        url('../assets/images/parchment-bg.png'),
+        radial-gradient(ellipse at 50% 50%, rgba(50, 30, 5, 0.5) 0%, transparent 70%);
+    background-size: cover;
+    background-blend-mode: multiply, normal;
+    position: relative;
+}
+
+/* ---- Bandeau joueur (haut = adversaire, bas = joueur courant) ---- */
+.player-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    background-color: var(--clr-wood-dark);
+    background-image: var(--wood-gradient);
+    border-bottom: 2px solid var(--clr-border);
+    flex-shrink: 0;
+}
+
+.player-banner.self {
+    margin-top: auto;
+    border-top: 2px solid var(--clr-border);
+    border-bottom: none;
+}
+
+.player-banner.opponent {
+    border-top: none;
+}
+
+/* Avatar du joueur dans le bandeau */
+.player-banner-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--clr-border-light);
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.player-banner-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.player-banner-info {
+    flex: 1;
+}
+
+.player-banner-name {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--clr-text-bright);
+    letter-spacing: 0.06em;
+}
+
+.player-banner-role {
+    font-size: 0.75rem;
+    font-style: italic;
+    color: var(--clr-text-muted);
+    margin-top: 0.1rem;
+}
+
+/* Indicateur de connexion dans le bandeau */
+.player-connection {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-style: italic;
+    color: var(--clr-text-muted);
+}
+
+/* ---- Zone de jeu centrale (placeholder pour le futur) ---- */
+.game-play-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Ligne centrale de la table */
+.game-play-area::before {
+    content: '';
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 50%;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--clr-wood-mid),
+        var(--clr-orange-dim),
+        var(--clr-wood-mid),
+        transparent
+    );
+    pointer-events: none;
+}
+
+.game-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+    color: var(--clr-text-muted);
+    font-style: italic;
+    z-index: 1;
+}
+
+.game-placeholder-icon {
+    font-size: 3rem;
+    opacity: 0.3;
+}
+
+.game-placeholder p {
+    font-size: 0.9rem;
+    max-width: 280px;
+    line-height: 1.6;
+}
+
+/* ============================================================
+   Panneau latéral : journal des événements
+   ============================================================ */
+.game-sidebar {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    border-left: 2px solid var(--clr-wood-mid);
+    background-color: var(--clr-surface-2);
+    overflow: hidden;
+}
+
+.game-sidebar-header {
+    padding: 0.85rem 1rem;
+    background-color: var(--clr-wood-dark);
+    background-image: var(--wood-gradient);
+    border-bottom: 1px solid var(--clr-border);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+.game-sidebar-header h3 {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--clr-text-bright);
+}
+
+.game-sidebar-icon {
+    font-size: 0.9rem;
+    color: var(--clr-orange-light);
+}
+
+/* Journal des événements */
+.game-event-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+/* Un événement dans le journal */
+.game-event-entry {
+    padding: 0.5rem 0.75rem;
+    border-left: 2px solid var(--clr-border);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: rgba(0,0,0,0.2);
+    animation: item-in 0.2s ease both;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--clr-text);
+}
+
+.game-event-entry.server    { border-left-color: var(--clr-orange-dim); }
+.game-event-entry.self      { border-left-color: var(--clr-blue); }
+.game-event-entry.opponent  { border-left-color: var(--clr-wood-light); }
+
+.game-event-actor {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--clr-text-muted);
+    display: block;
+    margin-bottom: 0.1rem;
+}
+
+.game-event-actor.server   { color: var(--clr-orange-light); }
+.game-event-actor.self     { color: var(--clr-blue-light); }
+.game-event-actor.opponent { color: var(--clr-wood-light); }
+
+.game-event-time {
+    font-size: 0.68rem;
+    color: var(--clr-text-dim);
+    float: right;
+    margin-left: 0.5rem;
+}
+
+/* Indicateur SSE */
+.sse-indicator {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--clr-border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    font-style: italic;
+    color: var(--clr-text-dim);
+    flex-shrink: 0;
+}
+
+.sse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.3s;
+}
+
+.sse-dot.connected    { background: var(--clr-success); box-shadow: 0 0 5px var(--clr-success); }
+.sse-dot.reconnecting { background: var(--clr-warning); animation: pulse-dot 1s infinite; }
+.sse-dot.disconnected { background: var(--clr-error); }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 800px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+        max-height: none;
+        overflow: auto;
+    }
+
+    .game-sidebar {
+        grid-column: 1;
+        grid-row: 2;
+        border-left: none;
+        border-top: 2px solid var(--clr-wood-mid);
+        max-height: 220px;
+    }
+}
