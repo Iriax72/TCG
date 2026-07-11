@@ -5,4 +5,4 @@ decks:
   => Ajouter une table dans la db 'cards' avec les cartes, leur nom, leurs mots-clés, leur id
 
 assets/cards:
-- Ajouter les nouvelles cartes ([102;infini[) au format .webp
+- Ajouter les nouvelles cartes (N u ]144;infini[) au format .webp

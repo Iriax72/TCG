@@ -575,7 +575,99 @@ switch ($action) {
             ]);
         }
 
+        // Récupérer les infos de sélection de deck (phase deckSelection)
+        // On retourne SEULEMENT des booléens, jamais les deck_id eux-mêmes.
+        $stmt = $pdo->prepare("
+            SELECT player_id FROM game_deck_selections WHERE game_id = :gid
+        ");
+        $stmt->execute([':gid' => $gameId]);
+        $selectedPlayerIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $game['self_selected']     = in_array($userId, array_map('intval', $selectedPlayerIds));
+        $game['opponent_selected'] = count($selectedPlayerIds) > ($game['self_selected'] ? 1 : 0);
+
         echo json_encode(['game' => $game, 'role' => $role]);
+        break;
+
+    // ------------------------------------------------------------------
+    // Enregistrer la sélection de deck d'un joueur (privée)
+    // Paramètres POST : game_id, deck_id
+    // Le deck_id n'est jamais broadcasté — seul le fait d'avoir sélectionné l'est.
+    // ------------------------------------------------------------------
+    case 'game_select_deck':
+        $gameId = (int) ($_POST['game_id'] ?? 0);
+        $deckId = (int) ($_POST['deck_id'] ?? 0);
+        $userId = getCurrentUserId();
+        $pdo    = getDB();
+
+        // Vérifier que l'utilisateur est dans cette partie
+        $stmt = $pdo->prepare("
+            SELECT id, player1_id, player2_id, status
+            FROM games
+            WHERE id = :gid AND (player1_id = :uid OR player2_id = :uid)
+        ");
+        $stmt->execute([':gid' => $gameId, ':uid' => $userId]);
+        $game = $stmt->fetch();
+
+        if (!$game) {
+            echo json_encode(['error' => 'Partie introuvable.']);
+            exit;
+        }
+        if ($game['status'] === 'finished') {
+            echo json_encode(['error' => 'La partie est terminée.']);
+            exit;
+        }
+
+        // Vérifier que le deck appartient bien à ce joueur
+        $stmt = $pdo->prepare("SELECT id FROM decks WHERE id = :did AND user_id = :uid");
+        $stmt->execute([':did' => $deckId, ':uid' => $userId]);
+        if (!$stmt->fetch()) {
+            echo json_encode(['error' => 'Deck introuvable ou non autorisé.']);
+            exit;
+        }
+
+        // Stocker la sélection (remplace si le joueur change d'avis)
+        $stmt = $pdo->prepare("
+            INSERT INTO game_deck_selections (game_id, player_id, deck_id)
+            VALUES (:gid, :uid, :did)
+            ON DUPLICATE KEY UPDATE deck_id = :did2, selected_at = NOW()
+        ");
+        $stmt->execute([':gid' => $gameId, ':uid' => $userId, ':did' => $deckId, ':did2' => $deckId]);
+
+        // Broadcaster que CE joueur a confirmé son choix (sans révéler le deck)
+        $stmt = $pdo->prepare("
+            INSERT INTO game_events (game_id, player_id, event_type, event_data)
+            VALUES (:gid, :uid, 'deck_confirmed', '{}')
+        ");
+        $stmt->execute([':gid' => $gameId, ':uid' => $userId]);
+
+        // Vérifier si les deux joueurs ont maintenant sélectionné
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) FROM game_deck_selections WHERE game_id = :gid
+        ");
+        $stmt->execute([':gid' => $gameId]);
+        $bothSelected = ((int) $stmt->fetchColumn()) >= 2;
+
+        if ($bothSelected) {
+            // Broadcaster la transition de phase — les deux clients peuvent avancer
+            $stmt = $pdo->prepare("
+                INSERT INTO game_events (game_id, player_id, event_type, event_data)
+                VALUES (:gid, NULL, 'all_decks_selected', :data)
+            ");
+            $stmt->execute([
+                ':gid'  => $gameId,
+                ':data' => json_encode(['message' => 'Les deux joueurs ont choisi leur deck. La partie commence !']),
+            ]);
+
+            // Passer la partie en active si ce n'est pas déjà le cas
+            $pdo->prepare("UPDATE games SET status = 'active' WHERE id = :id AND status != 'active'")
+                ->execute([':id' => $gameId]);
+        }
+
+        echo json_encode([
+            'success'       => true,
+            'both_selected' => $bothSelected,
+        ]);
         break;
 
     // ------------------------------------------------------------------

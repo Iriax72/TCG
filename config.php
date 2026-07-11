@@ -176,4 +176,19 @@ function initDatabase(): void {
             FOREIGN KEY (player_id) REFERENCES users(id) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
+
+    // Sélections de deck privées — jamais exposées à l'adversaire.
+    // Clé primaire composite : un joueur ne peut choisir qu'un deck par partie.
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS game_deck_selections (
+            game_id    INT NOT NULL,
+            player_id  INT NOT NULL,
+            deck_id    INT NOT NULL,
+            selected_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (game_id, player_id),
+            FOREIGN KEY (game_id)   REFERENCES games(id)  ON DELETE CASCADE,
+            FOREIGN KEY (player_id) REFERENCES users(id)  ON DELETE CASCADE,
+            FOREIGN KEY (deck_id)   REFERENCES decks(id)  ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
 }
