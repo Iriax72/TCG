@@ -68,7 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ============================================================
        Initialisation
        ============================================================ */
+    // Affichage immédiat avec les données pré-chargées par PHP (pas de fetch)
+    if (window.INITIAL_DECKS && window.INITIAL_DECKS.length > 0) {
+        renderDeckList(window.INITIAL_DECKS);
+    }
+
     loadCards();
+    // loadDecks() rafraîchit la liste en arrière-plan pour refléter
+    // d'éventuelles modifications depuis le chargement de la page
     loadDecks();
 
     /* ============================================================
@@ -103,12 +110,25 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadDecks() {
         try {
             const res  = await fetch('api.php?action=get_decks', { credentials: 'same-origin' });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (parseErr) {
+                console.error('loadDecks JSON parse error:', parseErr, '— Response:', text);
+                return; // Ne pas écraser l'affichage pré-chargé si le fetch échoue
+            }
+            if (data.error) {
+                console.warn('loadDecks API error:', data.error);
+                return; // Idem : garder l'affichage pré-chargé
+            }
             renderDeckList(data.decks || []);
         } catch (err) {
-            console.error('loadDecks error:', err);
-            decksList.innerHTML = '<p class="list-empty">Impossible de charger vos decks.</p>';
+            console.error('loadDecks fetch error:', err);
+            // On ne touche pas à decksList si des données pré-chargées sont déjà affichées
+            if (!window.INITIAL_DECKS || window.INITIAL_DECKS.length === 0) {
+                if (decksList) decksList.innerHTML = '<p class="list-empty">Impossible de charger vos decks.</p>';
+            }
         }
     }
 

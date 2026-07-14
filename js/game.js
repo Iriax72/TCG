@@ -269,17 +269,11 @@ function onBgioStateChange(G, ctx) {
    Phase 1 — Sélection du deck
    ============================================================ */
 
-/** Charge les decks du joueur depuis l'API et les affiche dans la grille */
-async function loadPlayerDecks() {
-    deckChoiceGrid.innerHTML = '<p class="list-empty">Chargement...</p>';
-
-    const res  = await fetch(`${window.APP.apiUrl}?action=get_decks`, { credentials: 'same-origin' });
-    const data = await res.json();
-    const decks = data.decks || [];
-
+/** Affiche une liste de decks dans la grille de sélection */
+function renderPlayerDeckGrid(decks) {
     deckChoiceGrid.innerHTML = '';
 
-    if (decks.length === 0) {
+    if (!decks || decks.length === 0) {
         deckChoiceGrid.innerHTML = `
             <div class="deck-choice-empty">
                 <p>Vous n'avez aucun deck.</p>
@@ -305,6 +299,41 @@ async function loadPlayerDecks() {
         item.addEventListener('click', () => selectDeck(deck.id, deck.name));
         deckChoiceGrid.appendChild(item);
     });
+}
+
+/**
+ * Charge les decks du joueur.
+ * Utilise d'abord window.INITIAL_PLAYER_DECKS (pré-chargé par PHP, affichage
+ * immédiat sans fetch), puis rafraîchit depuis l'API en arrière-plan.
+ */
+async function loadPlayerDecks() {
+    // Affichage immédiat depuis les données pré-chargées
+    if (window.INITIAL_PLAYER_DECKS) {
+        renderPlayerDeckGrid(window.INITIAL_PLAYER_DECKS);
+    } else {
+        deckChoiceGrid.innerHTML = '<p class="list-empty">Chargement...</p>';
+    }
+
+    // Rafraîchissement depuis l'API (capture les decks créés après le chargement)
+    try {
+        const res  = await fetch(`${window.APP.apiUrl}?action=get_decks`, { credentials: 'same-origin' });
+        const text = await res.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.warn('loadPlayerDecks: réponse non-JSON', text);
+            return; // Garder l'affichage pré-chargé
+        }
+        if (data.error) {
+            console.warn('loadPlayerDecks API error:', data.error);
+            return;
+        }
+        renderPlayerDeckGrid(data.decks || []);
+    } catch (err) {
+        console.warn('loadPlayerDecks fetch error:', err);
+        // Le pré-chargement est déjà affiché, pas besoin de message d'erreur
+    }
 }
 
 /** L'utilisateur clique sur un deck (pré-sélection, pas encore confirmé) */

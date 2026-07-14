@@ -20,6 +20,20 @@ if ($gameId <= 0) {
     header('Location: ../index.php');
     exit;
 }
+
+// --- Pré-chargement des decks du joueur (évite un fetch au démarrage) ---
+$pdo  = getDB();
+$stmt = $pdo->prepare("
+    SELECT d.id, d.name, d.updated_at,
+           COALESCE(SUM(dc.quantity), 0) AS card_count
+    FROM decks d
+    LEFT JOIN deck_cards dc ON dc.deck_id = d.id
+    WHERE d.user_id = :uid
+    GROUP BY d.id, d.name, d.updated_at
+    ORDER BY d.updated_at DESC
+");
+$stmt->execute([':uid' => $currentId]);
+$preloadedDecks = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -42,6 +56,8 @@ if ($gameId <= 0) {
         apiUrl:          'api.php',
         sseUrl:          'sse.php?game_id=<?= $gameId ?>'
     };
+    // Decks du joueur pré-chargés côté serveur pour un affichage immédiat
+    window.INITIAL_PLAYER_DECKS = <?= json_encode($preloadedDecks) ?>;
 </script>
 
 <div class="game-page">
