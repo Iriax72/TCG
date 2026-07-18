@@ -626,13 +626,16 @@ switch ($action) {
             exit;
         }
 
-        // Stocker la sélection (remplace si le joueur change d'avis)
+        // Stocker la sélection (remplace si le joueur change d'avis).
+        // On utilise VALUES(deck_id) dans le ON DUPLICATE KEY UPDATE pour éviter
+        // d'introduire un second paramètre nommé pour la même valeur : PDO avec
+        // ATTR_EMULATE_PREPARES => false lève une erreur HY000 dans ce cas.
         $stmt = $pdo->prepare("
             INSERT INTO game_deck_selections (game_id, player_id, deck_id)
             VALUES (:gid, :uid, :did)
-            ON DUPLICATE KEY UPDATE deck_id = :did2, selected_at = NOW()
+            ON DUPLICATE KEY UPDATE deck_id = VALUES(deck_id), selected_at = NOW()
         ");
-        $stmt->execute([':gid' => $gameId, ':uid' => $userId, ':did' => $deckId, ':did2' => $deckId]);
+        $stmt->execute([':gid' => $gameId, ':uid' => $userId, ':did' => $deckId]);
 
         // Broadcaster que CE joueur a confirmé son choix (sans révéler le deck)
         $stmt = $pdo->prepare("
