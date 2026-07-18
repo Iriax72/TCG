@@ -22,18 +22,24 @@ if ($gameId <= 0) {
 }
 
 // --- Pré-chargement des decks du joueur (évite un fetch au démarrage) ---
-$pdo  = getDB();
-$stmt = $pdo->prepare("
-    SELECT d.id, d.name, d.updated_at,
-           COALESCE(SUM(dc.quantity), 0) AS card_count
-    FROM decks d
-    LEFT JOIN deck_cards dc ON dc.deck_id = d.id
-    WHERE d.user_id = :uid
-    GROUP BY d.id, d.name, d.updated_at
-    ORDER BY d.updated_at DESC
-");
-$stmt->execute([':uid' => $currentId]);
-$preloadedDecks = $stmt->fetchAll();
+// Protégé par try/catch : si la DB est indisponible, on injecte un tableau vide
+// plutôt que de corrompre le HTML avec un message d'erreur PHP.
+try {
+    $pdo  = getDB();
+    $stmt = $pdo->prepare("
+        SELECT d.id, d.name, d.updated_at,
+               COALESCE(SUM(dc.quantity), 0) AS card_count
+        FROM decks d
+        LEFT JOIN deck_cards dc ON dc.deck_id = d.id
+        WHERE d.user_id = :uid
+        GROUP BY d.id, d.name, d.updated_at
+        ORDER BY d.updated_at DESC
+    ");
+    $stmt->execute([':uid' => $currentId]);
+    $preloadedDecks = $stmt->fetchAll() ?: [];
+} catch (Throwable $e) {
+    $preloadedDecks = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">

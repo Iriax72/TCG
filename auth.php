@@ -12,7 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
         'lifetime' => SESSION_LIFETIME,
         'path'     => '/',
-        'secure'   => false, // Passer à true en HTTPS
+        'secure'   => true, // Passer à true en HTTPS
         'httponly' => true,
         'samesite' => 'Strict',
     ]);
