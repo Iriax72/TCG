@@ -56,9 +56,9 @@ if ($gameId <= 0) {
 $pdo  = getDB();
 $stmt = $pdo->prepare("
     SELECT id FROM games
-    WHERE id = :gid AND (player1_id = :uid OR player2_id = :uid)
+    WHERE id = :gid AND (player1_id = :uid OR player2_id = :uid2)
 ");
-$stmt->execute([':gid' => $gameId, ':uid' => $userId]);
+$stmt->execute([':gid' => $gameId, ':uid' => $userId, ':uid2' => $userId]);
 if (!$stmt->fetch()) {
     echo "event: error\n";
     echo "data: " . json_encode(['error' => 'Accès refusé.']) . "\n\n";

@@ -541,9 +541,9 @@ switch ($action) {
             JOIN users u1 ON u1.id = g.player1_id
             JOIN users u2 ON u2.id = g.player2_id
             WHERE g.id = :gid
-              AND (g.player1_id = :uid OR g.player2_id = :uid)
+              AND (g.player1_id = :uid OR g.player2_id = :uid2)
         ");
-        $stmt->execute([':gid' => $gameId, ':uid' => $userId]);
+        $stmt->execute([':gid' => $gameId, ':uid' => $userId, ':uid2' => $userId]);
         $game = $stmt->fetch();
 
         if (!$game) {
@@ -604,9 +604,9 @@ switch ($action) {
         $stmt = $pdo->prepare("
             SELECT id, player1_id, player2_id, status
             FROM games
-            WHERE id = :gid AND (player1_id = :uid OR player2_id = :uid)
+            WHERE id = :gid AND (player1_id = :uid OR player2_id = :uid2)
         ");
-        $stmt->execute([':gid' => $gameId, ':uid' => $userId]);
+        $stmt->execute([':gid' => $gameId, ':uid' => $userId, ':uid2' => $userId]);
         $game = $stmt->fetch();
 
         if (!$game) {
@@ -689,10 +689,10 @@ switch ($action) {
         // Vérifier que l'utilisateur est bien dans cette partie
         $stmt = $pdo->prepare("
             SELECT id FROM games
-            WHERE id = :gid AND (player1_id = :uid OR player2_id = :uid)
+            WHERE id = :gid AND (player1_id = :uid OR player2_id = :uid2)
               AND status = 'active'
         ");
-        $stmt->execute([':gid' => $gameId, ':uid' => $userId]);
+        $stmt->execute([':gid' => $gameId, ':uid' => $userId, ':uid2' => $userId]);
         if (!$stmt->fetch()) {
             echo json_encode(['error' => 'Partie introuvable ou non active.']);
             exit;
